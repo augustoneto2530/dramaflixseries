@@ -14,16 +14,381 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      contents: {
+        Row: {
+          banner_image_url: string | null
+          category: Database["public"]["Enums"]["content_category"]
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          is_adult: boolean
+          is_featured: boolean
+          is_new: boolean
+          is_trending: boolean
+          rating: number | null
+          release_year: number | null
+          tags: string[] | null
+          title: string
+          total_episodes: number | null
+          updated_at: string
+        }
+        Insert: {
+          banner_image_url?: string | null
+          category: Database["public"]["Enums"]["content_category"]
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_adult?: boolean
+          is_featured?: boolean
+          is_new?: boolean
+          is_trending?: boolean
+          rating?: number | null
+          release_year?: number | null
+          tags?: string[] | null
+          title: string
+          total_episodes?: number | null
+          updated_at?: string
+        }
+        Update: {
+          banner_image_url?: string | null
+          category?: Database["public"]["Enums"]["content_category"]
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_adult?: boolean
+          is_featured?: boolean
+          is_new?: boolean
+          is_trending?: boolean
+          rating?: number | null
+          release_year?: number | null
+          tags?: string[] | null
+          title?: string
+          total_episodes?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      episodes: {
+        Row: {
+          content_id: string
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          episode_number: number
+          id: string
+          thumbnail_url: string | null
+          title: string | null
+          updated_at: string
+          video_url: string
+        }
+        Insert: {
+          content_id: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          episode_number: number
+          id?: string
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string
+          video_url: string
+        }
+        Update: {
+          content_id?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          episode_number?: number
+          id?: string
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "episodes_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "contents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      online_users: {
+        Row: {
+          id: string
+          is_online: boolean
+          last_seen: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_online?: boolean
+          last_seen?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_online?: boolean
+          last_seen?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          is_vip: boolean
+          plan_type: Database["public"]["Enums"]["plan_type"] | null
+          subscription_end_date: string | null
+          subscription_start_date: string | null
+          subscription_status: Database["public"]["Enums"]["subscription_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          is_vip?: boolean
+          plan_type?: Database["public"]["Enums"]["plan_type"] | null
+          subscription_end_date?: string | null
+          subscription_start_date?: string | null
+          subscription_status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          is_vip?: boolean
+          plan_type?: Database["public"]["Enums"]["plan_type"] | null
+          subscription_end_date?: string | null
+          subscription_start_date?: string | null
+          subscription_status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      purchase_webhooks: {
+        Row: {
+          amount: number | null
+          buyer_document: string | null
+          buyer_email: string
+          buyer_name: string | null
+          buyer_phone: string | null
+          created_at: string
+          currency: string | null
+          id: string
+          payment_method: string | null
+          payment_status: string | null
+          processed: boolean
+          processed_at: string | null
+          product_id: string | null
+          product_name: string | null
+          raw_data: Json
+          transaction_id: string | null
+          user_id: string | null
+          webhook_type: Database["public"]["Enums"]["plan_type"]
+        }
+        Insert: {
+          amount?: number | null
+          buyer_document?: string | null
+          buyer_email: string
+          buyer_name?: string | null
+          buyer_phone?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          payment_method?: string | null
+          payment_status?: string | null
+          processed?: boolean
+          processed_at?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          raw_data: Json
+          transaction_id?: string | null
+          user_id?: string | null
+          webhook_type: Database["public"]["Enums"]["plan_type"]
+        }
+        Update: {
+          amount?: number | null
+          buyer_document?: string | null
+          buyer_email?: string
+          buyer_name?: string | null
+          buyer_phone?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          payment_method?: string | null
+          payment_status?: string | null
+          processed?: boolean
+          processed_at?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          raw_data?: Json
+          transaction_id?: string | null
+          user_id?: string | null
+          webhook_type?: Database["public"]["Enums"]["plan_type"]
+        }
+        Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string | null
+          features: Json | null
+          id: string
+          is_active: boolean
+          name: string
+          plan_type: Database["public"]["Enums"]["plan_type"]
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          name: string
+          plan_type: Database["public"]["Enums"]["plan_type"]
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          plan_type?: Database["public"]["Enums"]["plan_type"]
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_watchlist: {
+        Row: {
+          content_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_watchlist_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "contents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      watch_progress: {
+        Row: {
+          completed: boolean
+          episode_id: string
+          id: string
+          last_watched_at: string
+          progress_seconds: number
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          episode_id: string
+          id?: string
+          last_watched_at?: string
+          progress_seconds?: number
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          episode_id?: string
+          id?: string
+          last_watched_at?: string
+          progress_seconds?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watch_progress_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      content_category: "doramas" | "adult" | "novelas" | "filmes" | "series"
+      plan_type: "monthly" | "annual"
+      subscription_status: "active" | "inactive" | "pending" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +515,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      content_category: ["doramas", "adult", "novelas", "filmes", "series"],
+      plan_type: ["monthly", "annual"],
+      subscription_status: ["active", "inactive", "pending", "cancelled"],
+    },
   },
 } as const
