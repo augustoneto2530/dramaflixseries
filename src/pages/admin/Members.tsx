@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Search, Crown, UserCheck, UserX, MoreHorizontal, Mail, Calendar, KeyRound, Loader2 } from 'lucide-react';
+import { ArrowLeft, Search, Crown, UserCheck, UserX, MoreHorizontal, Mail, Calendar, KeyRound, Loader2, Flame, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,11 +26,14 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import type { Profile } from '@/lib/types';
 
+type MemberFilter = 'all' | 'monthly' | 'annual' | 'adult' | 'partial' | 'vip';
+
 export default function AdminMembers() {
   const { user, isAdmin, isLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [members, setMembers] = useState<Profile[]>([]);
+  const [memberFilter, setMemberFilter] = useState<MemberFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoadingMembers, setIsLoadingMembers] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -133,6 +137,35 @@ export default function AdminMembers() {
     }
   };
 
+  const toggleAdultAccess = async (memberId: string, currentStatus: boolean) => {
+    try {
+      const endDate = new Date();
+      endDate.setFullYear(endDate.getFullYear() + 1);
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          has_adult_access: !currentStatus,
+          adult_access_start_date: !currentStatus ? new Date().toISOString() : null,
+          adult_access_end_date: !currentStatus ? endDate.toISOString() : null,
+        })
+        .eq('id', memberId);
+
+      if (error) throw error;
+
+      setMembers(prev => prev.map(m => 
+        m.id === memberId ? { ...m, has_adult_access: !currentStatus } : m
+      ));
+
+      toast({
+        title: 'Sucesso',
+        description: !currentStatus ? 'Acesso +18 liberado!' : 'Acesso +18 removido',
+      });
+    } catch (err) {
+      toast({ title: 'Erro', description: 'Erro ao atualizar acesso +18', variant: 'destructive' });
+    }
+  };
+
   const sendPasswordReset = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -182,10 +215,38 @@ export default function AdminMembers() {
     }
   };
 
-  const filteredMembers = members.filter(m =>
+  // Filter by search
+  const searchFiltered = members.filter(m =>
     m.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (m.full_name?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  // Filter by type
+  const filteredMembers = searchFiltered.filter(m => {
+    switch (memberFilter) {
+      case 'monthly':
+        return m.subscription_status === 'active' && m.plan_type === 'monthly';
+      case 'annual':
+        return m.subscription_status === 'active' && m.plan_type === 'annual';
+      case 'adult':
+        return m.has_adult_access;
+      case 'partial':
+        return m.plan_type === 'single_content';
+      case 'vip':
+        return m.is_vip;
+      default:
+        return true;
+    }
+  });
+
+  const memberCounts = {
+    all: members.length,
+    monthly: members.filter(m => m.subscription_status === 'active' && m.plan_type === 'monthly').length,
+    annual: members.filter(m => m.subscription_status === 'active' && m.plan_type === 'annual').length,
+    adult: members.filter(m => m.has_adult_access).length,
+    partial: members.filter(m => m.plan_type === 'single_content').length,
+    vip: members.filter(m => m.is_vip).length,
+  };
 
   if (isLoading || !isAdmin) return null;
 
@@ -209,6 +270,35 @@ export default function AdminMembers() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Filter Tabs */}
+        <Tabs value={memberFilter} onValueChange={(v) => setMemberFilter(v as MemberFilter)} className="mb-6">
+          <TabsList className="bg-muted/50 flex-wrap h-auto gap-1 p-1">
+            <TabsTrigger value="all" className="gap-1">
+              <Users className="h-4 w-4" />
+              Todos ({memberCounts.all})
+            </TabsTrigger>
+            <TabsTrigger value="monthly" className="gap-1">
+              <Calendar className="h-4 w-4" />
+              Mensais ({memberCounts.monthly})
+            </TabsTrigger>
+            <TabsTrigger value="annual" className="gap-1">
+              <UserCheck className="h-4 w-4" />
+              Anuais ({memberCounts.annual})
+            </TabsTrigger>
+            <TabsTrigger value="adult" className="gap-1">
+              <Flame className="h-4 w-4" />
+              +18 ({memberCounts.adult})
+            </TabsTrigger>
+            <TabsTrigger value="partial" className="gap-1">
+              Parciais ({memberCounts.partial})
+            </TabsTrigger>
+            <TabsTrigger value="vip" className="gap-1">
+              <Crown className="h-4 w-4" />
+              VIP ({memberCounts.vip})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
         {/* Search */}
         <div className="mb-6">
           <div className="relative max-w-md">
@@ -249,7 +339,13 @@ export default function AdminMembers() {
                           {member.subscription_status === 'active' && (
                             <Badge variant="secondary" className="bg-green-500/20 text-green-500">
                               <UserCheck className="h-3 w-3 mr-1" />
-                              {member.plan_type === 'annual' ? 'Anual' : 'Mensal'}
+                              {member.plan_type === 'annual' ? 'Anual' : member.plan_type === 'monthly' ? 'Mensal' : 'Parcial'}
+                            </Badge>
+                          )}
+                          {member.has_adult_access && (
+                            <Badge variant="secondary" className="bg-pink-500/20 text-pink-500">
+                              <Flame className="h-3 w-3 mr-1" />
+                              +18
                             </Badge>
                           )}
                         </div>
@@ -295,6 +391,10 @@ export default function AdminMembers() {
                             Cancelar Assinatura
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuItem onClick={() => toggleAdultAccess(member.id, member.has_adult_access)}>
+                          <Flame className="h-4 w-4 mr-2" />
+                          {member.has_adult_access ? 'Remover Acesso +18' : 'Liberar Acesso +18'}
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => sendPasswordReset(member.email)}>
                           <KeyRound className="h-4 w-4 mr-2" />
                           Enviar Recuperação de Senha
