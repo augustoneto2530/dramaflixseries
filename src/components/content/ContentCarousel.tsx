@@ -8,6 +8,7 @@ interface ContentCarouselProps {
   title: string;
   contents: Content[];
   icon?: 'flame' | 'trending' | 'sparkles';
+  singleRow?: boolean;
 }
 
 const icons = {
@@ -16,7 +17,7 @@ const icons = {
   sparkles: Sparkles,
 };
 
-export function ContentCarousel({ title, contents, icon }: ContentCarouselProps) {
+export function ContentCarousel({ title, contents, icon, singleRow = false }: ContentCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -73,22 +74,32 @@ export function ContentCarousel({ title, contents, icon }: ContentCarouselProps)
           {contents.map((content) => (
             <div
               key={content.id}
-              className="flex-shrink-0 w-[140px] lg:w-[160px] snap-start"
+              className="flex-shrink-0 w-[160px] lg:w-[180px] snap-start"
             >
               <ContentCard content={content} />
             </div>
           ))}
         </div>
 
-        {/* Mobile Carousel - 2 rows grid with horizontal scroll */}
+        {/* Mobile Carousel - Single or Double row grid with horizontal scroll */}
         <div className="md:hidden overflow-x-auto scrollbar-hide -mx-3 px-3">
-          <div className="grid grid-rows-2 grid-flow-col gap-2 auto-cols-[105px]">
-            {contents.map((content) => (
-              <div key={content.id} className="w-[105px]">
-                <ContentCard content={content} />
-              </div>
-            ))}
-          </div>
+          {singleRow ? (
+            <div className="flex gap-2">
+              {contents.map((content) => (
+                <div key={content.id} className="flex-shrink-0 w-[120px]">
+                  <ContentCard content={content} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-rows-2 grid-flow-col gap-2 auto-cols-[120px]">
+              {contents.map((content) => (
+                <div key={content.id} className="w-[120px]">
+                  <ContentCard content={content} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>
