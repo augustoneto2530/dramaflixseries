@@ -412,7 +412,7 @@ export default function Index() {
       <HeroSlider contents={featuredContents} />
 
       {/* Content Sections */}
-      <div className="space-y-2 pb-12">
+      <div className="space-y-1 md:space-y-2 pb-8 md:pb-12">
         <ContentCarousel
           title="Em Alta"
           contents={trendingContents}
