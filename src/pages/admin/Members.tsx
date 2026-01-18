@@ -43,6 +43,9 @@ export default function AdminMembers() {
   const [newMemberName, setNewMemberName] = useState('');
   const [newMemberPlanType, setNewMemberPlanType] = useState<'monthly' | 'annual' | 'adult' | 'single_content'>('monthly');
   const [newMemberIncludeAdult, setNewMemberIncludeAdult] = useState(false);
+  const [selectedContentId, setSelectedContentId] = useState<string>('');
+  const [contents, setContents] = useState<{id: string, title: string}[]>([]);
+  const [isLoadingContents, setIsLoadingContents] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -50,8 +53,28 @@ export default function AdminMembers() {
   }, [user, isAdmin, isLoading, navigate]);
 
   useEffect(() => {
-    if (isAdmin) fetchMembers();
+    if (isAdmin) {
+      fetchMembers();
+      fetchContents();
+    }
   }, [isAdmin]);
+
+  const fetchContents = async () => {
+    setIsLoadingContents(true);
+    try {
+      const { data, error } = await supabase
+        .from('contents')
+        .select('id, title')
+        .order('title');
+      
+      if (error) throw error;
+      setContents(data || []);
+    } catch (err) {
+      console.error('Error fetching contents:', err);
+    } finally {
+      setIsLoadingContents(false);
+    }
+  };
 
   const fetchMembers = async () => {
     setIsLoadingMembers(true);
@@ -198,6 +221,11 @@ export default function AdminMembers() {
       return;
     }
 
+    if (newMemberPlanType === 'single_content' && !selectedContentId) {
+      toast({ title: 'Erro', description: 'Selecione um conteúdo para o plano parcial', variant: 'destructive' });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke('add-member', {
@@ -206,6 +234,7 @@ export default function AdminMembers() {
           name: newMemberName,
           planType: newMemberPlanType,
           includeAdultAccess: newMemberIncludeAdult || newMemberPlanType === 'annual' || newMemberPlanType === 'adult',
+          contentId: newMemberPlanType === 'single_content' ? selectedContentId : undefined,
         },
       });
 
@@ -217,6 +246,7 @@ export default function AdminMembers() {
       setNewMemberName('');
       setNewMemberPlanType('monthly');
       setNewMemberIncludeAdult(false);
+      setSelectedContentId('');
       fetchMembers();
     } catch (err) {
       console.error('Error adding member:', err);
@@ -500,6 +530,27 @@ export default function AdminMembers() {
                   <Flame className="h-4 w-4 text-pink-500" />
                   Incluir acesso +18
                 </label>
+              </div>
+            )}
+
+            {newMemberPlanType === 'single_content' && (
+              <div className="space-y-2">
+                <Label htmlFor="contentSelect">Conteúdo a Liberar *</Label>
+                <Select 
+                  value={selectedContentId} 
+                  onValueChange={setSelectedContentId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={isLoadingContents ? "Carregando..." : "Selecione o conteúdo"} />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {contents.map((content) => (
+                      <SelectItem key={content.id} value={content.id}>
+                        {content.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
 

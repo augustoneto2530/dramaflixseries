@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { email, name, planType, includeAdultAccess } = await req.json();
+    const { email, name, planType, includeAdultAccess, contentId } = await req.json();
 
     if (!email) {
       return new Response(
@@ -31,15 +31,33 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (planType === 'single_content' && !contentId) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'ID do conteúdo é obrigatório para plano parcial' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const trimmedEmail = email.trim().toLowerCase();
-    console.log('Adicionando membro:', trimmedEmail, 'Plano:', planType, 'Acesso +18:', includeAdultAccess);
+    console.log('Adicionando membro:', trimmedEmail, 'Plano:', planType, 'Acesso +18:', includeAdultAccess, 'ContentId:', contentId);
+
+    // Get content title if single_content
+    let contentTitle = '';
+    if (planType === 'single_content' && contentId) {
+      const { data: contentData } = await supabase
+        .from('contents')
+        .select('title')
+        .eq('id', contentId)
+        .single();
+      contentTitle = contentData?.title || 'Conteúdo Avulso';
+    }
 
     // Calculate plan name for display
     const planNames: Record<string, string> = {
       monthly: 'Plano Mensal',
       annual: 'Plano Anual',
       adult: 'Acesso +18',
-      single_content: 'Conteúdo Avulso',
+      single_content: `Conteúdo Avulso: ${contentTitle}`,
     };
 
     // Create a purchase_webhooks entry so the user can access the platform
@@ -55,6 +73,7 @@ Deno.serve(async (req) => {
           added_at: new Date().toISOString(),
           plan_type: planType,
           include_adult_access: includeAdultAccess || false,
+          content_id: contentId || null,
         },
         processed: true,
         processed_at: new Date().toISOString(),
@@ -118,6 +137,19 @@ Deno.serve(async (req) => {
         .update(profileUpdate)
         .eq('user_id', existingUser.id);
 
+      // If single_content, create content purchase entry
+      if (planType === 'single_content' && contentId) {
+        await supabase
+          .from('user_content_purchases')
+          .insert({
+            user_id: existingUser.id,
+            content_id: contentId,
+            is_lifetime: true,
+            webhook_id: webhookData?.id || null,
+          });
+        console.log('Acesso ao conteúdo liberado para usuário existente');
+      }
+
       return new Response(
         JSON.stringify({ 
           success: true, 
@@ -129,6 +161,7 @@ Deno.serve(async (req) => {
     }
 
     // User doesn't exist yet - webhook entry is enough for first access authorization
+    // For single_content, we need to track the content_id so we can grant access after signup
     return new Response(
       JSON.stringify({ 
         success: true, 
