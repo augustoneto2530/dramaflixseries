@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, User, LogOut, Settings, Crown } from 'lucide-react';
+import { Search, Menu, X, User, LogOut, Settings, Crown, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -22,7 +22,6 @@ const categories = [
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { user, profile, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
@@ -31,46 +30,32 @@ export function Header() {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/buscar?q=${encodeURIComponent(searchQuery)}`);
-      setIsSearchOpen(false);
       setSearchQuery('');
     }
   };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-border">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+      <div className="container mx-auto px-3 md:px-4">
+        <div className="flex items-center justify-between h-14 md:h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg brand-gradient flex items-center justify-center">
-              <span className="text-xl font-bold text-white">D</span>
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg brand-gradient flex items-center justify-center">
+              <span className="text-lg md:text-xl font-bold text-white">K</span>
             </div>
-            <span className="text-xl font-bold brand-gradient-text hidden sm:block">
-              Drama_Flix
+            <span className="text-lg md:text-xl font-bold text-foreground hidden xs:block">
+              kdramatv
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-6">
-            {categories.map((category) => (
-              <Link
-                key={category.name}
-                to={category.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {category.name}
-              </Link>
-            ))}
-          </nav>
-
           {/* Search Bar - Desktop */}
-          <div className="hidden md:flex items-center gap-4 flex-1 max-w-md mx-8">
+          <div className="hidden md:flex items-center gap-4 flex-1 max-w-lg mx-8">
             <form onSubmit={handleSearch} className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Buscar doramas, séries, filmes..."
-                className="pl-10 bg-muted/50 border-border focus:bg-muted"
+                className="pl-10 bg-muted/50 border-border focus:bg-muted rounded-full"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -78,22 +63,20 @@ export function Header() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
-            {/* Mobile Search Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-            >
-              <Search className="h-5 w-5" />
-            </Button>
+          <div className="flex items-center gap-1 md:gap-2">
+            {/* Support Link - Desktop */}
+            <Link to="/suporte" className="hidden md:flex">
+              <Button variant="ghost" size="sm" className="gap-2 text-secondary">
+                <MessageCircle className="h-4 w-4" />
+                Suporte
+              </Button>
+            </Link>
 
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
-                    <User className="h-5 w-5" />
+                  <Button variant="ghost" size="icon" className="relative h-8 w-8 md:h-9 md:w-9">
+                    <User className="h-4 w-4 md:h-5 md:w-5" />
                     {profile?.is_vip && (
                       <Crown className="absolute -top-1 -right-1 h-3 w-3 text-accent" />
                     )}
@@ -137,18 +120,18 @@ export function Header() {
               </DropdownMenu>
             ) : (
               <>
-                <Link to="/planos">
+                <Link to="/planos" className="hidden md:block">
                   <Button variant="ghost" size="sm">
                     Planos
                   </Button>
                 </Link>
-                <Link to="/entrar">
+                <Link to="/entrar" className="hidden md:block">
                   <Button variant="ghost" size="sm">
                     Entrar
                   </Button>
                 </Link>
                 <Link to="/cadastrar">
-                  <Button size="sm" className="brand-gradient">
+                  <Button size="sm" className="brand-gradient text-xs md:text-sm h-8 md:h-9 px-3 md:px-4">
                     Cadastrar
                   </Button>
                 </Link>
@@ -159,7 +142,7 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden"
+              className="md:hidden h-8 w-8"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -167,26 +150,23 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile Search */}
-        {isSearchOpen && (
-          <div className="md:hidden py-3 border-t border-border animate-fade-in">
-            <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Buscar..."
-                className="pl-10 bg-muted/50"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                autoFocus
-              />
-            </form>
-          </div>
-        )}
+        {/* Mobile Search - Always visible on mobile */}
+        <div className="md:hidden pb-3">
+          <form onSubmit={handleSearch} className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Buscar doramas, séries, filmes..."
+              className="pl-10 bg-muted/50 rounded-full h-10 text-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </form>
+        </div>
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <nav className="lg:hidden py-4 border-t border-border animate-fade-in">
+          <nav className="md:hidden py-4 border-t border-border animate-fade-in">
             <div className="flex flex-col gap-2">
               {categories.map((category) => (
                 <Link
@@ -198,6 +178,21 @@ export function Header() {
                   {category.name}
                 </Link>
               ))}
+              <div className="border-t border-border my-2" />
+              <Link
+                to="/planos"
+                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Planos
+              </Link>
+              <Link
+                to="/suporte"
+                className="px-4 py-2 text-sm font-medium text-secondary hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Suporte
+              </Link>
             </div>
           </nav>
         )}
