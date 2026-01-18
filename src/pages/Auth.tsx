@@ -99,9 +99,13 @@ export default function Auth() {
       if (!webhooks || webhooks.length === 0) {
         toast({
           title: 'Acesso não autorizado',
-          description: 'Este email não possui acesso. É necessário realizar uma compra primeiro.',
+          description: 'Apenas usuários compradores podem acessar. Adquira um plano para começar!',
           variant: 'destructive',
         });
+        // Redirect to plans page after short delay
+        setTimeout(() => {
+          navigate('/planos');
+        }, 2000);
         setIsLoading(false);
         return;
       }
@@ -427,8 +431,14 @@ export default function Auth() {
               </form>
 
               <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground text-center">
-                  <strong>Observação:</strong> Apenas usuários com compra aprovada podem acessar a plataforma.
+                <p className="text-sm text-muted-foreground text-center mb-2">
+                  <strong>Apenas compradores podem acessar.</strong>
+                </p>
+                <p className="text-xs text-muted-foreground text-center">
+                  Ainda não tem acesso?{' '}
+                  <Link to="/planos" className="text-primary hover:underline font-medium">
+                    Adquira seu plano aqui
+                  </Link>
                 </p>
               </div>
 
