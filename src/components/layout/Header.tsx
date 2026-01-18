@@ -125,14 +125,9 @@ export function Header() {
                     Planos
                   </Button>
                 </Link>
-                <Link to="/entrar" className="hidden md:block">
-                  <Button variant="ghost" size="sm">
-                    Entrar
-                  </Button>
-                </Link>
-                <Link to="/cadastrar">
+                <Link to="/entrar">
                   <Button size="sm" className="brand-gradient text-xs md:text-sm h-8 md:h-9 px-3 md:px-4">
-                    Cadastrar
+                    Acessar Minha Conta
                   </Button>
                 </Link>
               </>
