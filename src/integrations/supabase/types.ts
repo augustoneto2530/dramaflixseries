@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      content_clicks: {
+        Row: {
+          clicked_at: string
+          content_id: string
+          created_at: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          clicked_at?: string
+          content_id: string
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          clicked_at?: string
+          content_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_clicks_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "contents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contents: {
         Row: {
           banner_image_url: string | null

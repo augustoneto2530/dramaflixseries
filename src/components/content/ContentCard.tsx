@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Star, Play, Lock, Flame } from 'lucide-react';
 import { Content, CATEGORY_LABELS, ContentCategory } from '@/lib/types';
@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useContentAccess } from '@/hooks/useContentAccess';
 import { ContentAccessPopup } from './ContentAccessPopup';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ContentCardProps {
   content: Content;
@@ -23,14 +25,33 @@ const categoryStyles: Record<ContentCategory, string> = {
 
 export function ContentCard({ content, variant = 'default', showLockOverlay = true }: ContentCardProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { checkContentAccess, getBlockedReason } = useContentAccess();
   const [showAccessPopup, setShowAccessPopup] = useState(false);
+  const [hasTrackedClick, setHasTrackedClick] = useState(false);
   
   const accessResult = checkContentAccess(content);
   const blockedReason = getBlockedReason(content);
   const isBlocked = showLockOverlay && !accessResult.hasAccess && blockedReason;
 
+  // Track click when card becomes visible/clicked
+  const trackClick = async () => {
+    if (hasTrackedClick) return;
+    
+    try {
+      await supabase.from('content_clicks').insert({
+        content_id: content.id,
+        user_id: user?.id || null,
+      });
+      setHasTrackedClick(true);
+    } catch (err) {
+      console.error('Error tracking click:', err);
+    }
+  };
+
   const handleClick = (e: React.MouseEvent) => {
+    trackClick();
+    
     if (isBlocked) {
       e.preventDefault();
       setShowAccessPopup(true);
