@@ -144,10 +144,13 @@ export type Database = {
       }
       profiles: {
         Row: {
+          adult_access_end_date: string | null
+          adult_access_start_date: string | null
           avatar_url: string | null
           created_at: string
           email: string
           full_name: string | null
+          has_adult_access: boolean
           id: string
           is_vip: boolean
           plan_type: Database["public"]["Enums"]["plan_type"] | null
@@ -158,10 +161,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          adult_access_end_date?: string | null
+          adult_access_start_date?: string | null
           avatar_url?: string | null
           created_at?: string
           email: string
           full_name?: string | null
+          has_adult_access?: boolean
           id?: string
           is_vip?: boolean
           plan_type?: Database["public"]["Enums"]["plan_type"] | null
@@ -172,10 +178,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          adult_access_end_date?: string | null
+          adult_access_start_date?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string
           full_name?: string | null
+          has_adult_access?: boolean
           id?: string
           is_vip?: boolean
           plan_type?: Database["public"]["Enums"]["plan_type"] | null
@@ -289,6 +298,57 @@ export type Database = {
         }
         Relationships: []
       }
+      user_content_purchases: {
+        Row: {
+          content_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_lifetime: boolean
+          purchased_at: string
+          transaction_id: string | null
+          user_id: string
+          webhook_id: string | null
+        }
+        Insert: {
+          content_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_lifetime?: boolean
+          purchased_at?: string
+          transaction_id?: string | null
+          user_id: string
+          webhook_id?: string | null
+        }
+        Update: {
+          content_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_lifetime?: boolean
+          purchased_at?: string
+          transaction_id?: string | null
+          user_id?: string
+          webhook_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_content_purchases_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "contents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_content_purchases_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -387,7 +447,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       content_category: "doramas" | "adult" | "novelas" | "filmes" | "series"
-      plan_type: "monthly" | "annual"
+      plan_type: "monthly" | "annual" | "adult" | "single_content"
       subscription_status: "active" | "inactive" | "pending" | "cancelled"
     }
     CompositeTypes: {
@@ -518,7 +578,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       content_category: ["doramas", "adult", "novelas", "filmes", "series"],
-      plan_type: ["monthly", "annual"],
+      plan_type: ["monthly", "annual", "adult", "single_content"],
       subscription_status: ["active", "inactive", "pending", "cancelled"],
     },
   },
