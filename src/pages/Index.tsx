@@ -86,6 +86,7 @@ export default function Index() {
         <ContentCarousel
           title="Filmes"
           contents={filmesContents}
+          singleRow
         />
 
         <ContentCarousel
