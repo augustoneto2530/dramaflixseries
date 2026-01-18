@@ -52,12 +52,11 @@ export default function Auth() {
 
       const trimmedEmail = email.trim().toLowerCase();
 
-      // Check if email exists in purchase_webhooks (processed webhooks)
+      // Check if email exists in purchase_webhooks (any webhook, processed or not)
       const { data: webhooks, error: webhookError } = await supabase
         .from('purchase_webhooks')
         .select('buyer_name, product_name, processed')
         .eq('buyer_email', trimmedEmail)
-        .eq('processed', true)
         .limit(1);
 
       if (webhookError) {
@@ -81,25 +80,35 @@ export default function Auth() {
         return;
       }
 
-      // Email is valid - check if user already has an account
+      // Email is valid - check if user already has an account by trying to sign in
       setWebhookData({
         buyerName: webhooks[0].buyer_name,
         productName: webhooks[0].product_name,
       });
 
-      // Check if profile exists (user already created password)
+      // Check if user exists in auth by checking profiles table
       const { data: profile } = await supabase
         .from('profiles')
         .select('user_id')
         .eq('email', trimmedEmail)
-        .single();
+        .maybeSingle();
 
-      if (profile?.user_id) {
+      // Also try to check if user can sign in (more reliable)
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password: 'test_if_user_exists_dummy_password_12345',
+      });
+
+      // If error is "Invalid login credentials", user exists but password is wrong
+      // If error is something else or no error, user may not exist
+      const userExists = signInError?.message?.includes('Invalid login credentials') || profile?.user_id;
+
+      if (userExists) {
         // User already has an account - go to login
         setHasExistingAccount(true);
         setStep('login');
       } else {
-        // First access - need to create password
+        // First access - need to create account with password
         setHasExistingAccount(false);
         setStep('create-password');
       }
@@ -117,7 +126,7 @@ export default function Auth() {
     }
   };
 
-  // Step 2: Create password (first access)
+  // Step 2: Create password (first access) - Now creates a new account
   const handleCreatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -144,64 +153,35 @@ export default function Auth() {
         return;
       }
 
-      // Update the user password via Supabase Auth
-      // First try to sign in with the temp password, then update
-      const { data: authData, error: signUpError } = await supabase.auth.updateUser({
-        password: password,
-      });
+      // Create new user account with signUp
+      const { error: signUpError } = await signUp(email, password, webhookData?.buyerName || undefined);
 
       if (signUpError) {
-        // User might not be signed in - need to use a different approach
-        // Since the webhook already created the user, we need to sign them in first
-        // and then update the password, or use the admin API
+        console.error('Error creating account:', signUpError);
         
-        // Try signing in with the temp password (set by webhook)
-        const tempPassword = `temp_${email.split('@')[0]}_2024!`;
-        const { error: tempSignInError } = await supabase.auth.signInWithPassword({
-          email: email,
-          password: tempPassword,
-        });
-
-        if (tempSignInError) {
-          // Maybe user was created with a different temp password format
-          // Try the alternative format
-          const altTempPassword = `DramaFlix_${email.split('@')[0]}_2024`;
-          const { error: altSignInError } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: altTempPassword,
-          });
-
-          if (altSignInError) {
-            console.error('Cannot sign in with temp password:', altSignInError);
-            toast({
-              title: 'Erro',
-              description: 'Erro ao configurar sua conta. Entre em contato com o suporte.',
-              variant: 'destructive',
-            });
-            setIsLoading(false);
-            return;
-          }
-        }
-
-        // Now update the password
-        const { error: updateError } = await supabase.auth.updateUser({
-          password: password,
-        });
-
-        if (updateError) {
-          console.error('Error updating password:', updateError);
+        // Check if user already exists
+        if (signUpError.message?.includes('already registered') || signUpError.message?.includes('already exists')) {
           toast({
-            title: 'Erro',
-            description: 'Erro ao definir sua senha. Tente novamente.',
+            title: 'Conta já existe',
+            description: 'Este email já possui uma conta. Tente fazer login.',
             variant: 'destructive',
           });
+          setStep('login');
           setIsLoading(false);
           return;
         }
+        
+        toast({
+          title: 'Erro',
+          description: 'Erro ao criar sua conta. Tente novamente.',
+          variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
       }
 
       toast({
-        title: 'Senha criada com sucesso!',
+        title: 'Conta criada com sucesso!',
         description: 'Bem-vindo ao Drama_Flix!',
       });
       navigate('/');
