@@ -12,7 +12,7 @@ import { z } from 'zod';
 const emailSchema = z.string().trim().email('Email inválido').max(255, 'Email muito longo');
 const passwordSchema = z.string().min(6, 'Senha deve ter pelo menos 6 caracteres').max(72, 'Senha muito longa');
 
-type Step = 'email' | 'create-password' | 'login';
+type Step = 'email' | 'create-password' | 'login' | 'reset-password';
 
 interface WebhookData {
   buyerName: string | null;
@@ -234,6 +234,42 @@ export default function Auth() {
         navigate('/');
       }
     } catch (err) {
+      toast({
+        title: 'Erro',
+        description: 'Ocorreu um erro inesperado.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Password Reset Request
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?reset=true`,
+      });
+
+      if (error) {
+        console.error('Error sending reset email:', error);
+        toast({
+          title: 'Erro',
+          description: 'Erro ao enviar email de recuperação. Tente novamente.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Email enviado!',
+          description: 'Verifique sua caixa de entrada para redefinir sua senha.',
+        });
+        setStep('login');
+      }
+    } catch (err) {
+      console.error('Error in password reset:', err);
       toast({
         title: 'Erro',
         description: 'Ocorreu um erro inesperado.',
@@ -468,14 +504,69 @@ export default function Auth() {
                   )}
                 </Button>
 
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    className="w-full text-primary" 
+                    onClick={() => setStep('reset-password')}
+                    disabled={isLoading}
+                  >
+                    Esqueci minha senha
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    className="w-full" 
+                    onClick={handleBack}
+                    disabled={isLoading}
+                  >
+                    Usar outro email
+                  </Button>
+                </div>
+              </form>
+            </>
+          )}
+
+          {/* Step 4: Reset Password */}
+          {step === 'reset-password' && (
+            <>
+              <h1 className="text-2xl font-bold text-center mb-2">Recuperar Senha</h1>
+              <p className="text-muted-foreground text-center mb-6">
+                Enviaremos um link para redefinir sua senha
+              </p>
+
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email-reset">Email</Label>
+                  <Input
+                    id="email-reset"
+                    type="email"
+                    value={email}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+
+                <Button type="submit" className="w-full brand-gradient" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    'Enviar Link de Recuperação'
+                  )}
+                </Button>
+
                 <Button 
                   type="button" 
                   variant="ghost" 
                   className="w-full" 
-                  onClick={handleBack}
+                  onClick={() => setStep('login')}
                   disabled={isLoading}
                 >
-                  Usar outro email
+                  Voltar ao login
                 </Button>
               </form>
             </>
