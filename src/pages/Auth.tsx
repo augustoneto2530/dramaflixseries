@@ -116,29 +116,26 @@ export default function Auth() {
         productName: webhooks[0].product_name,
       });
 
-      // Check if user exists in auth by checking profiles table
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('email', trimmedEmail)
-        .maybeSingle();
-
-      // Also try to check if user can sign in (more reliable)
+      // Check if user exists in auth by trying to sign in with dummy password
+      // "Invalid login credentials" means user exists but wrong password
+      // "User not found" or other errors mean user doesn't exist
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: trimmedEmail,
         password: 'test_if_user_exists_dummy_password_12345',
       });
 
-      // If error is "Invalid login credentials", user exists but password is wrong
-      // If error is something else or no error, user may not exist
-      const userExists = signInError?.message?.includes('Invalid login credentials') || profile?.user_id;
+      console.log('Sign in check result:', signInError?.message);
 
-      if (userExists) {
-        // User already has an account - go to login
+      // Check the exact error message to determine if user exists
+      // "Invalid login credentials" means user exists and has a password set
+      const userHasPassword = signInError?.message?.includes('Invalid login credentials');
+
+      if (userHasPassword) {
+        // User already has an account with password - go to login
         setHasExistingAccount(true);
         setStep('login');
       } else {
-        // First access - need to create account with password
+        // First access OR user was added manually - need to create account with password
         setHasExistingAccount(false);
         setStep('create-password');
       }
