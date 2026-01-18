@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Search, Crown, UserCheck, UserX, MoreHorizontal, Mail, Phone, Calendar } from 'lucide-react';
+import { ArrowLeft, Search, Crown, UserCheck, UserX, MoreHorizontal, Mail, Calendar, KeyRound, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -130,6 +130,28 @@ export default function AdminMembers() {
       toast({ title: 'Sucesso', description: 'Assinatura cancelada' });
     } catch (err) {
       toast({ title: 'Erro', description: 'Erro ao cancelar', variant: 'destructive' });
+    }
+  };
+
+  const sendPasswordReset = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?reset=true`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Email enviado!',
+        description: `Link de recuperação enviado para ${email}`,
+      });
+    } catch (err) {
+      console.error('Error sending password reset:', err);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao enviar email de recuperação',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -273,6 +295,10 @@ export default function AdminMembers() {
                             Cancelar Assinatura
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuItem onClick={() => sendPasswordReset(member.email)}>
+                          <KeyRound className="h-4 w-4 mr-2" />
+                          Enviar Recuperação de Senha
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -289,7 +315,7 @@ export default function AdminMembers() {
           <DialogHeader>
             <DialogTitle>Adicionar Novo Membro</DialogTitle>
             <DialogDescription>
-              Crie uma conta para um novo membro. Uma senha temporária será gerada.
+              O membro receberá acesso e poderá criar sua própria senha no primeiro acesso.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
