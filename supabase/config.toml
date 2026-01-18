@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.webhook-plano-vip]
 verify_jwt = false
+
+[functions.webhook-plano-anual]
+verify_jwt = false
