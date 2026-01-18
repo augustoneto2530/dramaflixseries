@@ -26,12 +26,55 @@ Deno.serve(async (req) => {
 
     console.log('Adicionando membro:', email);
 
-    // Generate random password
-    const tempPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
+    // First, create a purchase_webhooks entry so the user can access the platform
+    const { data: webhookData, error: webhookError } = await supabase
+      .from('purchase_webhooks')
+      .insert({
+        buyer_email: email.trim().toLowerCase(),
+        buyer_name: name || null,
+        webhook_type: 'monthly', // Default plan type for manual members
+        product_name: 'Acesso Manual (Admin)',
+        raw_data: { added_manually: true, added_at: new Date().toISOString() },
+        processed: true, // Mark as processed since we're handling it now
+        processed_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (webhookError) {
+      console.error('Erro ao criar entrada de webhook:', webhookError);
+      // Continue anyway - user might already have a webhook entry
+    } else {
+      console.log('Entrada de webhook criada:', webhookData.id);
+    }
+
+    // Check if user already exists
+    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    const existingUser = existingUsers?.users?.find(u => u.email === email.trim().toLowerCase());
+
+    if (existingUser) {
+      console.log('Usuário já existe:', existingUser.id);
+      
+      // Update webhook with user_id if we created one
+      if (webhookData?.id) {
+        await supabase
+          .from('purchase_webhooks')
+          .update({ user_id: existingUser.id })
+          .eq('id', webhookData.id);
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, user_id: existingUser.id, message: 'Usuário já existia, acesso garantido' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Generate random password - user will set their own on first access
+    const tempPassword = crypto.randomUUID();
 
     // Create user
     const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-      email: email,
+      email: email.trim().toLowerCase(),
       password: tempPassword,
       email_confirm: true,
       user_metadata: {
@@ -47,12 +90,30 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Update profile with name if provided
-    if (newUser?.user && name) {
+    // Update profile with name and activate subscription
+    if (newUser?.user) {
+      const now = new Date();
+      const endDate = new Date(now);
+      endDate.setMonth(endDate.getMonth() + 1); // 1 month subscription for manual members
+
       await supabase
         .from('profiles')
-        .update({ full_name: name })
+        .update({ 
+          full_name: name || null,
+          subscription_status: 'active',
+          plan_type: 'monthly',
+          subscription_start_date: now.toISOString(),
+          subscription_end_date: endDate.toISOString(),
+        })
         .eq('user_id', newUser.user.id);
+
+      // Update webhook with user_id
+      if (webhookData?.id) {
+        await supabase
+          .from('purchase_webhooks')
+          .update({ user_id: newUser.user.id })
+          .eq('id', webhookData.id);
+      }
     }
 
     console.log('Membro adicionado com sucesso:', email);
