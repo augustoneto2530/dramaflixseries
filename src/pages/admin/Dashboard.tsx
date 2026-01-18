@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Users, Film, Webhook, Activity, Crown, TrendingUp, Calendar } from 'lucide-react';
+import { Users, Film, Webhook, Activity, Crown, TrendingUp, Calendar, Link2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -123,6 +123,7 @@ export default function AdminDashboard() {
     { title: 'Membros', description: 'Gerenciar usuários e VIPs', icon: Users, href: '/admin/membros', color: 'bg-blue-500' },
     { title: 'Conteúdos', description: 'Gerenciar filmes e séries', icon: Film, href: '/admin/conteudos', color: 'bg-purple-500' },
     { title: 'Webhooks', description: 'Visualizar compras', icon: Webhook, href: '/admin/webhooks', color: 'bg-green-500' },
+    { title: 'Gerador de Webhooks', description: 'Criar URLs para vendas avulsas', icon: Link2, href: '/admin/webhooks/gerar', color: 'bg-orange-500' },
   ];
 
   const statsCards = [
@@ -173,7 +174,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {menuItems.map((item) => (
             <Link key={item.href} to={item.href}>
               <Card className="hover:border-primary transition-all duration-200 cursor-pointer hover:shadow-lg">

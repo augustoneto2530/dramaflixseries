@@ -20,6 +20,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminMembers from "./pages/admin/Members";
 import AdminContents from "./pages/admin/Contents";
 import AdminWebhooks from "./pages/admin/Webhooks";
+import AdminWebhookGenerator from "./pages/admin/WebhookGenerator";
 import AdminAdultAccess from "./pages/admin/AdultAccess";
 import NotFound from "./pages/NotFound";
 
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/admin/membros" element={<AdminMembers />} />
             <Route path="/admin/conteudos" element={<AdminContents />} />
             <Route path="/admin/webhooks" element={<AdminWebhooks />} />
+            <Route path="/admin/webhooks/gerar" element={<AdminWebhookGenerator />} />
             <Route path="/admin/adult" element={<AdminAdultAccess />} />
             
             {/* Catch-all */}

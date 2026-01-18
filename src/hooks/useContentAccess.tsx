@@ -66,12 +66,13 @@ export function useContentAccess() {
 
     // Monthly subscription
     if (profile.subscription_status === 'active' && profile.plan_type === 'monthly') {
-      // Check for adult content
+      // Check for adult content - Monthly users NEVER have access to adult content without paying extra
       if (content.is_adult) {
-        // Monthly user needs adult access
+        // Monthly user needs explicit adult access
         if (profile.has_adult_access) {
           return { hasAccess: true, accessType: 'adult_only', purchasedContentIds };
         }
+        // Block access for monthly users without adult access
         return { hasAccess: false, accessType: 'none', purchasedContentIds };
       }
       // Non-adult content is accessible for monthly users
