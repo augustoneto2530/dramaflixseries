@@ -345,6 +345,27 @@ export default function Auth() {
                   <strong>Observação:</strong> Apenas usuários com compra aprovada podem acessar a plataforma.
                 </p>
               </div>
+
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (email.trim()) {
+                      setEmail(email.trim().toLowerCase());
+                      setStep('reset-password');
+                    } else {
+                      toast({
+                        title: 'Email necessário',
+                        description: 'Digite seu email primeiro para recuperar a senha.',
+                        variant: 'destructive',
+                      });
+                    }
+                  }}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Esqueci minha senha
+                </button>
+              </div>
             </>
           )}
 
