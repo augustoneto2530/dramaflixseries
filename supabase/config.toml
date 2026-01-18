@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.webhook-ligada-a-honra]
 verify_jwt = false
+
+[functions.webhook-plano-vip]
+verify_jwt = false
