@@ -2,7 +2,7 @@ export type ContentCategory = 'doramas' | 'adult' | 'novelas' | 'filmes' | 'seri
 
 export type SubscriptionStatus = 'active' | 'inactive' | 'pending' | 'cancelled';
 
-export type PlanType = 'monthly' | 'annual';
+export type PlanType = 'monthly' | 'annual' | 'adult' | 'single_content';
 
 export type AppRole = 'admin' | 'user';
 
@@ -17,6 +17,9 @@ export interface Profile {
   subscription_start_date: string | null;
   subscription_end_date: string | null;
   is_vip: boolean;
+  has_adult_access: boolean;
+  adult_access_start_date: string | null;
+  adult_access_end_date: string | null;
   created_at: string;
   updated_at: string;
 }
