@@ -13,8 +13,8 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 
 const categories = [
-  { name: 'Doramas', href: '/categoria/doramas' },
   { name: '+18', href: '/categoria/adult' },
+  { name: 'Doramas', href: '/categoria/doramas' },
   { name: 'Novelas', href: '/categoria/novelas' },
   { name: 'Filmes', href: '/categoria/filmes' },
   { name: 'Séries', href: '/categoria/series' },

@@ -15,6 +15,7 @@ import Watch from "./pages/Watch";
 import Search from "./pages/Search";
 import Support from "./pages/Support";
 import Watchlist from "./pages/Watchlist";
+import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminMembers from "./pages/admin/Members";
 import AdminContents from "./pages/admin/Contents";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/buscar" element={<Search />} />
             <Route path="/suporte" element={<Support />} />
             <Route path="/minha-lista" element={<Watchlist />} />
+            <Route path="/perfil" element={<Profile />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
