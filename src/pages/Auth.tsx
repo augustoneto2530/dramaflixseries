@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, CheckCircle, ArrowRight, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, CheckCircle, ArrowRight, Loader2, User, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,6 +22,7 @@ interface WebhookData {
 export default function Auth() {
   const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -115,6 +116,11 @@ export default function Auth() {
         buyerName: webhooks[0].buyer_name,
         productName: webhooks[0].product_name,
       });
+      
+      // Pre-fill the name if available from webhook
+      if (webhooks[0].buyer_name) {
+        setFullName(webhooks[0].buyer_name);
+      }
 
       // Check if user exists in auth by trying to sign in with dummy password
       // "Invalid login credentials" means user exists but wrong password
@@ -159,6 +165,17 @@ export default function Auth() {
     setIsLoading(true);
 
     try {
+      // Validate name
+      if (!fullName.trim()) {
+        toast({
+          title: 'Nome obrigatório',
+          description: 'Por favor, informe seu nome completo.',
+          variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
+      }
+      
       const passwordValidation = passwordSchema.safeParse(password);
       if (!passwordValidation.success) {
         toast({
@@ -170,18 +187,9 @@ export default function Auth() {
         return;
       }
 
-      if (password !== confirmPassword) {
-        toast({
-          title: 'Erro de validação',
-          description: 'As senhas não coincidem.',
-          variant: 'destructive',
-        });
-        setIsLoading(false);
-        return;
-      }
 
-      // Create new user account with signUp
-      const { error: signUpError } = await signUp(email, password, webhookData?.buyerName || undefined);
+      // Create new user account with signUp - use the name from form (user can edit)
+      const { error: signUpError } = await signUp(email, password, fullName || webhookData?.buyerName || undefined);
 
       if (signUpError) {
         console.error('Error creating account:', signUpError);
@@ -371,6 +379,7 @@ export default function Auth() {
     setStep('email');
     setPassword('');
     setConfirmPassword('');
+    setFullName('');
   };
 
   return (
@@ -462,55 +471,73 @@ export default function Auth() {
             </>
           )}
 
-          {/* Step 2: Create Password (First Access) */}
+          {/* Step 2: Create Password (First Access) - Modal Style */}
           {step === 'create-password' && (
             <>
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                  <CheckCircle className="h-6 w-6 text-green-500" />
+              {/* Header com ícone de sucesso */}
+              <div className="flex items-center gap-3 mb-6 p-4 bg-gradient-to-r from-amber-500/20 to-yellow-500/10 rounded-lg border border-amber-500/30">
+                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="h-5 w-5 text-amber-500" />
+                </div>
+                <div>
+                  <h2 className="font-semibold text-foreground">Compra identificada!</h2>
+                  <p className="text-sm text-muted-foreground">Escolha sua senha abaixo</p>
                 </div>
               </div>
-              
-              <h1 className="text-2xl font-bold text-center mb-2">Primeiro Acesso</h1>
-              <p className="text-muted-foreground text-center mb-2">
-                {webhookData?.buyerName && (
-                  <span className="block text-foreground font-medium">
-                    Olá, {webhookData.buyerName}!
-                  </span>
-                )}
-                Crie sua senha para acessar a plataforma
-              </p>
-              {webhookData?.productName && (
-                <p className="text-xs text-primary text-center mb-6">
-                  Acesso: {webhookData.productName}
-                </p>
-              )}
 
               <form onSubmit={handleCreatePassword} className="space-y-4">
+                {/* Campo Nome */}
                 <div className="space-y-2">
-                  <Label htmlFor="email-display">Email</Label>
+                  <Label htmlFor="fullName" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Nome completo
+                  </Label>
                   <Input
-                    id="email-display"
-                    type="email"
-                    value={email}
-                    disabled
-                    className="bg-muted"
+                    id="fullName"
+                    type="text"
+                    placeholder="Seu nome"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    disabled={isLoading}
                   />
                 </div>
 
+                {/* Campo Email (readonly) */}
                 <div className="space-y-2">
-                  <Label htmlFor="password">Criar Senha</Label>
+                  <Label htmlFor="email-display" className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    Email
+                  </Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="email-display"
+                      type="email"
+                      value={email}
+                      disabled
+                      className="bg-muted pr-10"
+                    />
+                    <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                  </div>
+                </div>
+
+                {/* Campo Senha */}
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="flex items-center gap-2">
+                    <Lock className="h-4 w-4" />
+                    Senha
+                  </Label>
+                  <div className="relative">
                     <Input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
-                      className="pl-10 pr-10"
+                      className="pr-10"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       disabled={isLoading}
+                      minLength={6}
                     />
                     <button
                       type="button"
@@ -520,33 +547,20 @@ export default function Auth() {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  <p className="text-xs text-muted-foreground">Mínimo 6 caracteres</p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="confirmPassword"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      className="pl-10"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
-
-                <Button type="submit" className="w-full brand-gradient" disabled={isLoading}>
+                <Button type="submit" className="w-full brand-gradient mt-6" disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Criando...
+                      Criando conta...
                     </>
                   ) : (
-                    'Criar Senha e Entrar'
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Criar conta
+                    </>
                   )}
                 </Button>
 
