@@ -47,7 +47,7 @@ export function HeroSlider({ contents }: HeroSliderProps) {
   const currentContent = contents[currentIndex];
 
   return (
-    <section className="relative h-[55vh] min-h-[350px] md:h-[70vh] md:min-h-[500px] max-h-[800px] overflow-hidden">
+    <section className="relative h-[50vh] min-h-[300px] md:h-[70vh] md:min-h-[500px] max-h-[800px] overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
         <img

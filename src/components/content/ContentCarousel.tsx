@@ -34,22 +34,22 @@ export function ContentCarousel({ title, contents, icon }: ContentCarouselProps)
     <section className="py-3 md:py-6">
       <div className="container mx-auto px-3 md:px-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-3 md:mb-4">
+        <div className="flex items-center justify-between mb-2 md:mb-4">
           <div className="flex items-center gap-2">
             {Icon && (
               <div className="w-6 h-6 md:w-8 md:h-8 rounded-full brand-gradient flex items-center justify-center">
                 <Icon className="h-3 w-3 md:h-4 md:w-4 text-white" />
               </div>
             )}
-            <h2 className="text-base md:text-xl font-bold">{title}</h2>
+            <h2 className="text-sm md:text-xl font-bold">{title}</h2>
           </div>
 
-          {/* Navigation Buttons */}
-          <div className="flex items-center gap-2">
+          {/* Navigation Buttons - Desktop only */}
+          <div className="hidden md:flex items-center gap-2">
             <Button
               variant="outline"
               size="icon"
-              className="hidden md:flex h-8 w-8"
+              className="h-8 w-8"
               onClick={() => scroll('left')}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -57,7 +57,7 @@ export function ContentCarousel({ title, contents, icon }: ContentCarouselProps)
             <Button
               variant="outline"
               size="icon"
-              className="hidden md:flex h-8 w-8"
+              className="h-8 w-8"
               onClick={() => scroll('right')}
             >
               <ChevronRight className="h-4 w-4" />
@@ -65,26 +65,26 @@ export function ContentCarousel({ title, contents, icon }: ContentCarouselProps)
           </div>
         </div>
 
-        {/* Carousel - Mobile: 2 rows grid, Desktop: horizontal scroll */}
+        {/* Desktop Carousel - Single row horizontal scroll */}
         <div
           ref={scrollRef}
-          className="md:flex md:gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-3 px-3 md:-mx-4 md:px-4 snap-x snap-mandatory hidden"
+          className="hidden md:flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 snap-x snap-mandatory"
         >
           {contents.map((content) => (
             <div
               key={content.id}
-              className="flex-shrink-0 w-[160px] lg:w-[180px] snap-start"
+              className="flex-shrink-0 w-[140px] lg:w-[160px] snap-start"
             >
               <ContentCard content={content} />
             </div>
           ))}
         </div>
 
-        {/* Mobile: 2 rows grid layout */}
-        <div className="md:hidden overflow-x-auto scrollbar-hide pb-2 -mx-3 px-3">
-          <div className="grid grid-rows-2 grid-flow-col gap-2 auto-cols-[100px]">
+        {/* Mobile Carousel - 2 rows grid with horizontal scroll */}
+        <div className="md:hidden overflow-x-auto scrollbar-hide -mx-3 px-3">
+          <div className="grid grid-rows-2 grid-flow-col gap-2 auto-cols-[105px]">
             {contents.map((content) => (
-              <div key={content.id} className="w-[100px]">
+              <div key={content.id} className="w-[105px]">
                 <ContentCard content={content} />
               </div>
             ))}

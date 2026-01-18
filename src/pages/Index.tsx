@@ -3,416 +3,64 @@ import { Layout } from '@/components/layout/Layout';
 import { HeroSlider } from '@/components/content/HeroSlider';
 import { ContentCarousel } from '@/components/content/ContentCarousel';
 import { Content } from '@/lib/types';
-
-// Dados de demonstração - serão substituídos por dados do banco
-const demoContents: Content[] = [
-  {
-    id: '1',
-    title: 'LIGADA A HONRA',
-    description: 'Drama de honra e amor',
-    category: 'doramas',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.18072912184810763.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.18072912184810763.jpg',
-    rating: 8.5,
-    release_year: 2025,
-    is_featured: true,
-    is_trending: true,
-    is_new: true,
-    is_adult: false,
-    total_episodes: 16,
-    duration_minutes: null,
-    tags: ['romance', 'drama'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    title: 'A RAINHA DO SÉCULO 21',
-    description: 'Uma rainha renascida no século 21',
-    category: 'doramas',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.6949751853721902.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.6949751853721902.jpg',
-    rating: 9.0,
-    release_year: 2025,
-    is_featured: true,
-    is_trending: true,
-    is_new: false,
-    is_adult: false,
-    total_episodes: 20,
-    duration_minutes: null,
-    tags: ['fantasia', 'comédia'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    title: 'ZOOTOPIA 2',
-    description: 'A aventura continua na cidade dos animais',
-    category: 'filmes',
-    cover_image_url: '/images/zootopia-2.webp',
-    banner_image_url: '/images/zootopia-2.webp',
-    rating: 9.5,
-    release_year: 2025,
-    is_featured: true,
-    is_trending: true,
-    is_new: true,
-    is_adult: false,
-    total_episodes: 1,
-    duration_minutes: 120,
-    tags: ['animação', 'aventura'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '4',
-    title: '50 TONS DE CINZA',
-    description: 'Filme sensual baseado no best-seller',
-    category: 'adult',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.035988132388708904.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.035988132388708904.jpg',
-    rating: 8.0,
-    release_year: 2024,
-    is_featured: true,
-    is_trending: false,
-    is_new: false,
-    is_adult: true,
-    total_episodes: 1,
-    duration_minutes: 125,
-    tags: ['romance', 'drama'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '5',
-    title: 'CONTRATADA PARA OBEDECER',
-    description: 'Contrato que vira amor',
-    category: 'adult',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.6219623957626933.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.6219623957626933.jpg',
-    rating: 8.0,
-    release_year: 2024,
-    is_featured: true,
-    is_trending: false,
-    is_new: false,
-    is_adult: true,
-    total_episodes: 1,
-    duration_minutes: 95,
-    tags: ['romance', 'drama'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '6',
-    title: 'EXCITAR A ESPOSA VIRGEM DO MAFIOSO',
-    description: 'Romance intenso com o mafioso',
-    category: 'adult',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.12853505000305054.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.12853505000305054.jpg',
-    rating: 8.0,
-    release_year: 2025,
-    is_featured: false,
-    is_trending: true,
-    is_new: true,
-    is_adult: true,
-    total_episodes: 80,
-    duration_minutes: null,
-    tags: ['romance', '+18'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '7',
-    title: 'ENCONTREI UM MARIDO BILIONÁRIO',
-    description: 'Uma história de amor inesperada no Natal',
-    category: 'series',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.8847104950845973.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.8847104950845973.jpg',
-    rating: 9.0,
-    release_year: 2025,
-    is_featured: false,
-    is_trending: true,
-    is_new: true,
-    is_adult: false,
-    total_episodes: 80,
-    duration_minutes: null,
-    tags: ['romance', 'comédia'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '8',
-    title: 'COMO DOMAR UM COROA',
-    description: 'Comédia romântica imperdível',
-    category: 'doramas',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.7251424771101691.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.7251424771101691.jpg',
-    rating: 8.5,
-    release_year: 2024,
-    is_featured: false,
-    is_trending: true,
-    is_new: false,
-    is_adult: false,
-    total_episodes: 12,
-    duration_minutes: null,
-    tags: ['comédia', 'romance'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '9',
-    title: 'CORRIDA PARA O MEU CORAÇÃO',
-    description: 'Uma corrida pelo amor verdadeiro',
-    category: 'doramas',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.0674429761205082.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.0674429761205082.jpg',
-    rating: 8.5,
-    release_year: 2024,
-    is_featured: false,
-    is_trending: true,
-    is_new: false,
-    is_adult: false,
-    total_episodes: 16,
-    duration_minutes: null,
-    tags: ['romance', 'drama'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '10',
-    title: 'O CEO E A GAROTA DO INTERIOR',
-    description: 'Amor improvável entre mundos diferentes',
-    category: 'series',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.5470029303554403.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.5470029303554403.jpg',
-    rating: 8.0,
-    release_year: 2025,
-    is_featured: false,
-    is_trending: true,
-    is_new: true,
-    is_adult: false,
-    total_episodes: 60,
-    duration_minutes: null,
-    tags: ['romance', 'drama'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '11',
-    title: 'A VIDA SECRETA DO MEU MARIDO BILIONÁRIO',
-    description: 'Segredos e romance de um bilionário',
-    category: 'series',
-    cover_image_url: 'https://dashboard.lowify.com.br/img/products/667e27f07dad6c742f009e7d1537feb9.webp',
-    banner_image_url: 'https://dashboard.lowify.com.br/img/products/667e27f07dad6c742f009e7d1537feb9.webp',
-    rating: 8.0,
-    release_year: 2025,
-    is_featured: false,
-    is_trending: true,
-    is_new: true,
-    is_adult: false,
-    total_episodes: 100,
-    duration_minutes: null,
-    tags: ['romance', 'drama'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '12',
-    title: 'A HERDEIRA FOI TROCADA AO NASCER?',
-    description: 'Mistério e drama familiar',
-    category: 'doramas',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.41742837895419105.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.41742837895419105.jpg',
-    rating: 8.5,
-    release_year: 2024,
-    is_featured: false,
-    is_trending: true,
-    is_new: false,
-    is_adult: false,
-    total_episodes: 16,
-    duration_minutes: null,
-    tags: ['drama', 'mistério'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '13',
-    title: 'PLANO B',
-    description: 'Quando o plano A falha, surge o amor',
-    category: 'filmes',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.6791392505879104.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.6791392505879104.jpg',
-    rating: 8.0,
-    release_year: 2025,
-    is_featured: false,
-    is_trending: false,
-    is_new: true,
-    is_adult: false,
-    total_episodes: 1,
-    duration_minutes: 110,
-    tags: ['comédia', 'romance'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '14',
-    title: '365 DIAS',
-    description: 'Romance intenso na Itália',
-    category: 'adult',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.035988132388708904.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.035988132388708904.jpg',
-    rating: 8.5,
-    release_year: 2020,
-    is_featured: false,
-    is_trending: true,
-    is_new: false,
-    is_adult: true,
-    total_episodes: 1,
-    duration_minutes: 116,
-    tags: ['romance', '+18'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '15',
-    title: 'JOGO DE TROCA DE MARIDOS',
-    description: 'Drama picante e cheio de reviravoltas',
-    category: 'adult',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.10003928041630261.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.10003928041630261.jpg',
-    rating: 8.5,
-    release_year: 2024,
-    is_featured: false,
-    is_trending: true,
-    is_new: false,
-    is_adult: true,
-    total_episodes: 50,
-    duration_minutes: null,
-    tags: ['drama', '+18'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '16',
-    title: 'BELA TÍMIDA E A FERA BILIONÁRIA',
-    description: 'A bela e a fera em versão moderna',
-    category: 'doramas',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.2488039665532964.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.2488039665532964.jpg',
-    rating: 8.5,
-    release_year: 2024,
-    is_featured: false,
-    is_trending: false,
-    is_new: false,
-    is_adult: false,
-    total_episodes: 16,
-    duration_minutes: null,
-    tags: ['romance', 'drama'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '17',
-    title: 'O LAÇO QUE NUNCA SE ROMPEU',
-    description: 'Um amor que transcende o tempo',
-    category: 'doramas',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.7499945611170673.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.7499945611170673.jpg',
-    rating: 8.5,
-    release_year: 2024,
-    is_featured: false,
-    is_trending: false,
-    is_new: false,
-    is_adult: false,
-    total_episodes: 20,
-    duration_minutes: null,
-    tags: ['romance', 'drama'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '18',
-    title: 'DESTINO SELADO, PACTO COM O REI DA MÁFIA',
-    description: 'Romance perigoso com o rei do crime',
-    category: 'series',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.9346563285727143.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.9346563285727143.jpg',
-    rating: 8.5,
-    release_year: 2024,
-    is_featured: false,
-    is_trending: false,
-    is_new: false,
-    is_adult: false,
-    total_episodes: 80,
-    duration_minutes: null,
-    tags: ['romance', 'ação'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '19',
-    title: 'MEU SUGAR BABY É O HOMEM MAIS RICO DE NY',
-    description: 'Surpresas do destino em Nova York',
-    category: 'doramas',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.4577124593837789.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.4577124593837789.jpg',
-    rating: 8.5,
-    release_year: 2024,
-    is_featured: false,
-    is_trending: false,
-    is_new: false,
-    is_adult: false,
-    total_episodes: 16,
-    duration_minutes: null,
-    tags: ['comédia', 'romance'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '20',
-    title: 'BILIONÁRIO DISFARÇADO DE GIGOLÔ',
-    description: 'Comédia romântica cheia de enganos',
-    category: 'series',
-    cover_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.6884527882753381.jpg',
-    banner_image_url: 'https://leftsuzgaasmbkabldoz.supabase.co/storage/v1/object/public/capas/0.6884527882753381.jpg',
-    rating: 8.5,
-    release_year: 2024,
-    is_featured: false,
-    is_trending: false,
-    is_new: false,
-    is_adult: false,
-    total_episodes: 60,
-    duration_minutes: null,
-    tags: ['comédia', 'romance'],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Index() {
-  const [featuredContents, setFeaturedContents] = useState<Content[]>([]);
-  const [trendingContents, setTrendingContents] = useState<Content[]>([]);
-  const [newContents, setNewContents] = useState<Content[]>([]);
-  const [doramasContents, setDoramasContents] = useState<Content[]>([]);
-  const [filmesContents, setFilmesContents] = useState<Content[]>([]);
-  const [seriesContents, setSeriesContents] = useState<Content[]>([]);
+  const [allContents, setAllContents] = useState<Content[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Por enquanto usando dados demo, depois conectar com Supabase
-    setFeaturedContents(demoContents.filter(c => c.is_featured));
-    setTrendingContents(demoContents.filter(c => c.is_trending));
-    setNewContents(demoContents.filter(c => c.is_new));
-    setDoramasContents(demoContents.filter(c => c.category === 'doramas'));
-    setFilmesContents(demoContents.filter(c => c.category === 'filmes'));
-    setSeriesContents(demoContents.filter(c => c.category === 'series'));
+    const fetchContents = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('contents')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching contents:', error);
+          return;
+        }
+
+        if (data) {
+          setAllContents(data as Content[]);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContents();
   }, []);
+
+  // Filter contents by category and flags
+  const featuredContents = allContents.filter(c => c.is_featured);
+  const trendingContents = allContents.filter(c => c.is_trending);
+  const newContents = allContents.filter(c => c.is_new);
+  const doramasContents = allContents.filter(c => c.category === 'doramas');
+  const seriesContents = allContents.filter(c => c.category === 'series');
+  const filmesContents = allContents.filter(c => c.category === 'filmes');
+  const adultContents = allContents.filter(c => c.category === 'adult');
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
       {/* Hero Slider */}
-      <HeroSlider contents={featuredContents} />
+      <HeroSlider contents={featuredContents.length > 0 ? featuredContents : allContents.slice(0, 5)} />
 
       {/* Content Sections */}
-      <div className="space-y-1 md:space-y-2 pb-8 md:pb-12">
+      <div className="space-y-0 pb-20 md:pb-12">
         <ContentCarousel
           title="Em Alta"
           contents={trendingContents}
@@ -431,13 +79,18 @@ export default function Index() {
         />
 
         <ContentCarousel
+          title="Séries"
+          contents={seriesContents}
+        />
+
+        <ContentCarousel
           title="Filmes"
           contents={filmesContents}
         />
 
         <ContentCarousel
-          title="Séries"
-          contents={seriesContents}
+          title="+18"
+          contents={adultContents}
         />
       </div>
     </Layout>
