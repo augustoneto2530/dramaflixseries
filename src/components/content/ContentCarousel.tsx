@@ -8,7 +8,7 @@ interface ContentCarouselProps {
   title: string;
   contents: Content[];
   icon?: 'flame' | 'trending' | 'sparkles';
-  singleRow?: boolean;
+  mobileRows?: 1 | 2 | 4;
 }
 
 const icons = {
@@ -17,7 +17,7 @@ const icons = {
   sparkles: Sparkles,
 };
 
-export function ContentCarousel({ title, contents, icon, singleRow = false }: ContentCarouselProps) {
+export function ContentCarousel({ title, contents, icon, mobileRows = 2 }: ContentCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -81,25 +81,21 @@ export function ContentCarousel({ title, contents, icon, singleRow = false }: Co
           ))}
         </div>
 
-        {/* Mobile Carousel - Single or Double row grid with horizontal scroll */}
+        {/* Mobile Carousel - Variable row grid with horizontal scroll */}
         <div className="md:hidden overflow-x-auto scrollbar-hide -mx-3 px-3">
-          {singleRow ? (
-            <div className="flex gap-2">
-              {contents.map((content) => (
-                <div key={content.id} className="flex-shrink-0 w-[120px]">
-                  <ContentCard content={content} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-rows-2 grid-flow-col gap-2 auto-cols-[120px]">
-              {contents.map((content) => (
-                <div key={content.id} className="w-[120px]">
-                  <ContentCard content={content} />
-                </div>
-              ))}
-            </div>
-          )}
+          <div 
+            className={`grid grid-flow-col gap-2 auto-cols-[120px] ${
+              mobileRows === 1 ? 'grid-rows-1' : 
+              mobileRows === 4 ? 'grid-rows-4' : 
+              'grid-rows-2'
+            }`}
+          >
+            {contents.map((content) => (
+              <div key={content.id} className="w-[120px]">
+                <ContentCard content={content} />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

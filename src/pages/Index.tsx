@@ -86,12 +86,13 @@ export default function Index() {
         <ContentCarousel
           title="Filmes"
           contents={filmesContents}
-          singleRow
+          mobileRows={1}
         />
 
         <ContentCarousel
           title="+18"
           contents={adultContents}
+          mobileRows={4}
         />
       </div>
     </Layout>
