@@ -5,9 +5,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +41,8 @@ export default function AdminMembers() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [newMemberName, setNewMemberName] = useState('');
+  const [newMemberPlanType, setNewMemberPlanType] = useState<'monthly' | 'annual' | 'adult' | 'single_content'>('monthly');
+  const [newMemberIncludeAdult, setNewMemberIncludeAdult] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -197,15 +201,22 @@ export default function AdminMembers() {
     setIsSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke('add-member', {
-        body: { email: newMemberEmail, name: newMemberName },
+        body: { 
+          email: newMemberEmail, 
+          name: newMemberName,
+          planType: newMemberPlanType,
+          includeAdultAccess: newMemberIncludeAdult || newMemberPlanType === 'annual' || newMemberPlanType === 'adult',
+        },
       });
 
       if (error) throw error;
 
-      toast({ title: 'Sucesso', description: 'Membro adicionado!' });
+      toast({ title: 'Sucesso', description: data?.message || 'Membro adicionado!' });
       setIsAddDialogOpen(false);
       setNewMemberEmail('');
       setNewMemberName('');
+      setNewMemberPlanType('monthly');
+      setNewMemberIncludeAdult(false);
       fetchMembers();
     } catch (err) {
       console.error('Error adding member:', err);
@@ -411,7 +422,7 @@ export default function AdminMembers() {
 
       {/* Add Member Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Adicionar Novo Membro</DialogTitle>
             <DialogDescription>
@@ -438,6 +449,68 @@ export default function AdminMembers() {
                 onChange={(e) => setNewMemberName(e.target.value)}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="planType">Tipo de Plano *</Label>
+              <Select 
+                value={newMemberPlanType} 
+                onValueChange={(value: 'monthly' | 'annual' | 'adult' | 'single_content') => setNewMemberPlanType(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o plano" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="monthly">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Plano Mensal
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="annual">
+                    <div className="flex items-center gap-2">
+                      <Crown className="h-4 w-4 text-yellow-500" />
+                      Plano Anual (inclui +18)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="adult">
+                    <div className="flex items-center gap-2">
+                      <Flame className="h-4 w-4 text-pink-500" />
+                      Acesso +18
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="single_content">
+                    <div className="flex items-center gap-2">
+                      Conteúdo Avulso
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {newMemberPlanType === 'monthly' && (
+              <div className="flex items-center space-x-2 p-3 bg-muted/50 rounded-lg">
+                <Checkbox
+                  id="includeAdult"
+                  checked={newMemberIncludeAdult}
+                  onCheckedChange={(checked) => setNewMemberIncludeAdult(checked as boolean)}
+                />
+                <label
+                  htmlFor="includeAdult"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+                >
+                  <Flame className="h-4 w-4 text-pink-500" />
+                  Incluir acesso +18
+                </label>
+              </div>
+            )}
+
+            {(newMemberPlanType === 'annual' || newMemberPlanType === 'adult') && (
+              <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                <p className="text-sm text-green-400 flex items-center gap-2">
+                  <Flame className="h-4 w-4" />
+                  Acesso +18 incluído automaticamente
+                </p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>

@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { email, name } = await req.json();
+    const { email, name, planType, includeAdultAccess } = await req.json();
 
     if (!email) {
       return new Response(
@@ -24,18 +24,39 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Adicionando membro:', email);
+    if (!planType) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Tipo de plano é obrigatório' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    // First, create a purchase_webhooks entry so the user can access the platform
+    const trimmedEmail = email.trim().toLowerCase();
+    console.log('Adicionando membro:', trimmedEmail, 'Plano:', planType, 'Acesso +18:', includeAdultAccess);
+
+    // Calculate plan name for display
+    const planNames: Record<string, string> = {
+      monthly: 'Plano Mensal',
+      annual: 'Plano Anual',
+      adult: 'Acesso +18',
+      single_content: 'Conteúdo Avulso',
+    };
+
+    // Create a purchase_webhooks entry so the user can access the platform
     const { data: webhookData, error: webhookError } = await supabase
       .from('purchase_webhooks')
       .insert({
-        buyer_email: email.trim().toLowerCase(),
+        buyer_email: trimmedEmail,
         buyer_name: name || null,
-        webhook_type: 'monthly', // Default plan type for manual members
-        product_name: 'Acesso Manual (Admin)',
-        raw_data: { added_manually: true, added_at: new Date().toISOString() },
-        processed: true, // Mark as processed since we're handling it now
+        webhook_type: planType,
+        product_name: `${planNames[planType] || planType} (Adicionado pelo Admin)`,
+        raw_data: { 
+          added_manually: true, 
+          added_at: new Date().toISOString(),
+          plan_type: planType,
+          include_adult_access: includeAdultAccess || false,
+        },
+        processed: true,
         processed_at: new Date().toISOString(),
       })
       .select()
@@ -50,7 +71,7 @@ Deno.serve(async (req) => {
 
     // Check if user already exists
     const { data: existingUsers } = await supabase.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(u => u.email === email.trim().toLowerCase());
+    const existingUser = existingUsers?.users?.find(u => u.email === trimmedEmail);
 
     if (existingUser) {
       console.log('Usuário já existe:', existingUser.id);
@@ -63,32 +84,56 @@ Deno.serve(async (req) => {
           .eq('id', webhookData.id);
       }
 
-      // Update profile to ensure subscription is active
+      // Calculate subscription end date based on plan type
       const now = new Date();
       const endDate = new Date(now);
-      endDate.setMonth(endDate.getMonth() + 1);
+      
+      if (planType === 'monthly') {
+        endDate.setMonth(endDate.getMonth() + 1);
+      } else if (planType === 'annual') {
+        endDate.setFullYear(endDate.getFullYear() + 1);
+      } else if (planType === 'adult') {
+        endDate.setFullYear(endDate.getFullYear() + 1);
+      }
 
+      // Prepare profile update
+      const profileUpdate: Record<string, any> = {
+        full_name: name || undefined,
+        subscription_status: 'active',
+        plan_type: planType,
+        subscription_start_date: now.toISOString(),
+        subscription_end_date: endDate.toISOString(),
+      };
+
+      // Add adult access if requested or if annual/adult plan
+      if (includeAdultAccess || planType === 'annual' || planType === 'adult') {
+        profileUpdate.has_adult_access = true;
+        profileUpdate.adult_access_start_date = now.toISOString();
+        profileUpdate.adult_access_end_date = endDate.toISOString();
+      }
+
+      // Update profile
       await supabase
         .from('profiles')
-        .update({ 
-          full_name: name || null,
-          subscription_status: 'active',
-          plan_type: 'monthly',
-          subscription_start_date: now.toISOString(),
-          subscription_end_date: endDate.toISOString(),
-        })
+        .update(profileUpdate)
         .eq('user_id', existingUser.id);
 
       return new Response(
-        JSON.stringify({ success: true, user_id: existingUser.id, message: 'Usuário já existia, acesso garantido' }),
+        JSON.stringify({ 
+          success: true, 
+          user_id: existingUser.id, 
+          message: 'Usuário já existia, acesso atualizado com sucesso!' 
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // DO NOT create user here - let them create their own account on first access
-    // The webhook entry is enough to authorize their access
+    // User doesn't exist yet - webhook entry is enough for first access authorization
     return new Response(
-      JSON.stringify({ success: true, message: 'Membro adicionado. Usuário criará conta no primeiro acesso.' }),
+      JSON.stringify({ 
+        success: true, 
+        message: 'Membro adicionado! O usuário criará sua conta no primeiro acesso.' 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
