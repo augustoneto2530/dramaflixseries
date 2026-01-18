@@ -122,26 +122,22 @@ export default function Auth() {
         setFullName(webhooks[0].buyer_name);
       }
 
-      // Check if user exists in auth by trying to sign in with dummy password
-      // "Invalid login credentials" means user exists but wrong password
-      // "User not found" or other errors mean user doesn't exist
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: trimmedEmail,
-        password: 'test_if_user_exists_dummy_password_12345',
-      });
+      // Check if user already has a profile (meaning they already created their account)
+      const { data: existingProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', trimmedEmail)
+        .single();
 
-      console.log('Sign in check result:', signInError?.message);
+      console.log('Profile check result:', existingProfile, profileError);
 
-      // Check the exact error message to determine if user exists
-      // "Invalid login credentials" means user exists and has a password set
-      const userHasPassword = signInError?.message?.includes('Invalid login credentials');
-
-      if (userHasPassword) {
-        // User already has an account with password - go to login
+      // If profile exists with user_id, user already has an account - go to login
+      // If no profile or profile error (PGRST116 = not found), user needs to create account
+      if (existingProfile?.user_id) {
         setHasExistingAccount(true);
         setStep('login');
       } else {
-        // First access OR user was added manually - need to create account with password
+        // First access - need to create account with password
         setHasExistingAccount(false);
         setStep('create-password');
       }
