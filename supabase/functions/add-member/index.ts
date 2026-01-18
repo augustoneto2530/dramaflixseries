@@ -63,38 +63,10 @@ Deno.serve(async (req) => {
           .eq('id', webhookData.id);
       }
 
-      return new Response(
-        JSON.stringify({ success: true, user_id: existingUser.id, message: 'Usuário já existia, acesso garantido' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Generate random password - user will set their own on first access
-    const tempPassword = crypto.randomUUID();
-
-    // Create user
-    const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-      email: email.trim().toLowerCase(),
-      password: tempPassword,
-      email_confirm: true,
-      user_metadata: {
-        full_name: name || '',
-      },
-    });
-
-    if (createError) {
-      console.error('Erro ao criar usuário:', createError);
-      return new Response(
-        JSON.stringify({ success: false, error: createError.message }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Update profile with name and activate subscription
-    if (newUser?.user) {
+      // Update profile to ensure subscription is active
       const now = new Date();
       const endDate = new Date(now);
-      endDate.setMonth(endDate.getMonth() + 1); // 1 month subscription for manual members
+      endDate.setMonth(endDate.getMonth() + 1);
 
       await supabase
         .from('profiles')
@@ -105,21 +77,18 @@ Deno.serve(async (req) => {
           subscription_start_date: now.toISOString(),
           subscription_end_date: endDate.toISOString(),
         })
-        .eq('user_id', newUser.user.id);
+        .eq('user_id', existingUser.id);
 
-      // Update webhook with user_id
-      if (webhookData?.id) {
-        await supabase
-          .from('purchase_webhooks')
-          .update({ user_id: newUser.user.id })
-          .eq('id', webhookData.id);
-      }
+      return new Response(
+        JSON.stringify({ success: true, user_id: existingUser.id, message: 'Usuário já existia, acesso garantido' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log('Membro adicionado com sucesso:', email);
-
+    // DO NOT create user here - let them create their own account on first access
+    // The webhook entry is enough to authorize their access
     return new Response(
-      JSON.stringify({ success: true, user_id: newUser?.user?.id }),
+      JSON.stringify({ success: true, message: 'Membro adicionado. Usuário criará conta no primeiro acesso.' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
