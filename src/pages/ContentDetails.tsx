@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Content } from '@/lib/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,6 +42,7 @@ const categoryLabels: Record<string, string> = {
 
 export default function ContentDetails() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { checkContentAccess, getBlockedReason } = useContentAccess();
   
@@ -119,9 +120,21 @@ export default function ContentDetails() {
       return;
     }
 
-    // Play the content
+    // Navigate to watch page with selected episode
     if (selectedEpisode) {
-      window.open(selectedEpisode.video_url, '_blank');
+      navigate(`/assistir/${id}?ep=${selectedEpisode.id}`);
+    } else {
+      navigate(`/assistir/${id}`);
+    }
+  };
+
+  const handleEpisodeClick = (episode: Episode) => {
+    setSelectedEpisode(episode);
+    
+    // If user has access, navigate to watch immediately
+    const accessResult = checkContentAccess(content!);
+    if (accessResult.hasAccess) {
+      navigate(`/assistir/${id}?ep=${episode.id}`);
     }
   };
 
@@ -333,7 +346,7 @@ export default function ContentDetails() {
                 className={`flex gap-4 p-4 rounded-lg bg-card border transition-all cursor-pointer hover:border-primary ${
                   selectedEpisode?.id === episode.id ? 'border-primary' : 'border-border'
                 }`}
-                onClick={() => setSelectedEpisode(episode)}
+                onClick={() => handleEpisodeClick(episode)}
               >
                 {/* Thumbnail */}
                 <div className="relative flex-shrink-0 w-40 aspect-video rounded-md overflow-hidden bg-muted">
