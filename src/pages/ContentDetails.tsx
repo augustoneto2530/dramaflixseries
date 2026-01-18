@@ -400,6 +400,7 @@ export default function ContentDetails() {
         open={showAccessPopup}
         onOpenChange={setShowAccessPopup}
         type={blockedReason || 'premium'}
+        adultPurchaseLink="https://pay.lowify.com.br/checkout?product_id=PfECsZ"
       />
     </Layout>
   );

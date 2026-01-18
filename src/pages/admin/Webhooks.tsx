@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Search, CheckCircle, Clock, AlertCircle, Copy, Flame, Crown, FileText, Calendar } from 'lucide-react';
+import { ArrowLeft, Search, CheckCircle, Clock, AlertCircle, Copy, Flame, Crown, FileText, Calendar, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -104,6 +104,12 @@ export default function AdminWebhooks() {
               </Link>
               <h1 className="text-xl font-bold">Webhooks de Compra</h1>
             </div>
+            <Link to="/admin/webhooks/gerar">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Gerar Webhook
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
