@@ -1,1 +1,19 @@
 project_id = "bxlhikdwicjflpxqaffl"
+
+[functions.add-member]
+verify_jwt = false
+
+[functions.webhook-monthly]
+verify_jwt = false
+
+[functions.webhook-annual]
+verify_jwt = false
+
+[functions.webhook-single-content]
+verify_jwt = false
+
+[functions.webhook-adult]
+verify_jwt = false
+
+[functions.webhook-ligada-a-honra]
+verify_jwt = false
