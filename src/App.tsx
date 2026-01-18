@@ -9,6 +9,11 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Plans from "./pages/Plans";
+import Category from "./pages/Category";
+import ContentDetails from "./pages/ContentDetails";
+import Search from "./pages/Search";
+import Support from "./pages/Support";
+import Watchlist from "./pages/Watchlist";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminMembers from "./pages/admin/Members";
 import AdminContents from "./pages/admin/Contents";
@@ -29,6 +34,11 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/entrar" element={<Auth />} />
             <Route path="/planos" element={<Plans />} />
+            <Route path="/categoria/:category" element={<Category />} />
+            <Route path="/conteudo/:id" element={<ContentDetails />} />
+            <Route path="/buscar" element={<Search />} />
+            <Route path="/suporte" element={<Support />} />
+            <Route path="/minha-lista" element={<Watchlist />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
