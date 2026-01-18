@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, CheckCircle, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { z } from 'zod';
 const emailSchema = z.string().trim().email('Email inválido').max(255, 'Email muito longo');
 const passwordSchema = z.string().min(6, 'Senha deve ter pelo menos 6 caracteres').max(72, 'Senha muito longa');
 
-type Step = 'email' | 'create-password' | 'login' | 'reset-password';
+type Step = 'email' | 'create-password' | 'login' | 'reset-password' | 'update-password';
 
 interface WebhookData {
   buyerName: string | null;
@@ -28,10 +28,36 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [webhookData, setWebhookData] = useState<WebhookData | null>(null);
   const [hasExistingAccount, setHasExistingAccount] = useState(false);
-  
+
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // If user comes from password recovery email, force "update-password" step
+  useEffect(() => {
+    const hash = window.location.hash || '';
+    const url = new URL(window.location.href);
+    const isRecovery = hash.includes('type=recovery') || url.searchParams.get('type') === 'recovery' || url.searchParams.get('reset') === 'true';
+
+    if (!isRecovery) return;
+
+    setStep('update-password');
+
+    const { data: authSub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        const recoveredEmail = session?.user?.email;
+        if (recoveredEmail) setEmail(recoveredEmail);
+      }
+    });
+
+    // Best-effort: prefill email if session already available
+    supabase.auth.getSession().then(({ data }) => {
+      const recoveredEmail = data.session?.user?.email;
+      if (recoveredEmail) setEmail(recoveredEmail);
+    });
+
+    return () => authSub.subscription.unsubscribe();
+  }, []);
 
   // Step 1: Validate email against webhooks
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -251,7 +277,8 @@ export default function Auth() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?reset=true`,
+        // Supabase recovery links provide tokens in the URL hash (#...type=recovery)
+        redirectTo: `${window.location.origin}/auth`,
       });
 
       if (error) {
@@ -275,6 +302,65 @@ export default function Auth() {
         description: 'Ocorreu um erro inesperado.',
         variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Password Update (when coming from recovery link)
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const passwordValidation = passwordSchema.safeParse(password);
+      if (!passwordValidation.success) {
+        toast({
+          title: 'Erro de validação',
+          description: passwordValidation.error.errors[0].message,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        toast({
+          title: 'Erro de validação',
+          description: 'As senhas não coincidem.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        toast({
+          title: 'Link inválido ou expirado',
+          description: 'Solicite novamente a recuperação de senha e tente de novo.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) {
+        console.error('Error updating password:', error);
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível atualizar sua senha. Tente novamente.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({
+        title: 'Senha atualizada!',
+        description: 'Você já pode acessar normalmente.',
+      });
+
+      // Remove hash params after success (avoid looping back into update mode)
+      window.history.replaceState({}, document.title, '/auth');
+      navigate('/');
     } finally {
       setIsLoading(false);
     }
@@ -580,11 +666,93 @@ export default function Auth() {
                   )}
                 </Button>
 
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  className="w-full" 
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full"
                   onClick={() => setStep('login')}
+                  disabled={isLoading}
+                >
+                  Voltar ao login
+                </Button>
+              </form>
+            </>
+          )}
+
+          {/* Step 5: Update Password (from recovery link) */}
+          {step === 'update-password' && (
+            <>
+              <h1 className="text-2xl font-bold text-center mb-2">Criar nova senha</h1>
+              <p className="text-muted-foreground text-center mb-6">
+                Defina sua nova senha para entrar imediatamente
+              </p>
+
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email-recovery">Email</Label>
+                  <Input id="email-recovery" type="email" value={email || 'Carregando...'} disabled className="bg-muted" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">Nova senha</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="new-password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      className="pl-10 pr-10"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={isLoading}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-new-password">Confirmar nova senha</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="confirm-new-password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      className="pl-10"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full brand-gradient" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    'Salvar nova senha'
+                  )}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => {
+                    window.history.replaceState({}, document.title, '/auth');
+                    setStep('login');
+                  }}
                   disabled={isLoading}
                 >
                   Voltar ao login
