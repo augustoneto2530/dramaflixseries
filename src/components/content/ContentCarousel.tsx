@@ -65,19 +65,30 @@ export function ContentCarousel({ title, contents, icon }: ContentCarouselProps)
           </div>
         </div>
 
-        {/* Carousel */}
+        {/* Carousel - Mobile: 2 rows grid, Desktop: horizontal scroll */}
         <div
           ref={scrollRef}
-          className="flex gap-2 md:gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-3 px-3 md:-mx-4 md:px-4 snap-x snap-mandatory"
+          className="md:flex md:gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-3 px-3 md:-mx-4 md:px-4 snap-x snap-mandatory hidden"
         >
           {contents.map((content) => (
             <div
               key={content.id}
-              className="flex-shrink-0 w-[100px] sm:w-[120px] md:w-[160px] lg:w-[180px] snap-start"
+              className="flex-shrink-0 w-[160px] lg:w-[180px] snap-start"
             >
               <ContentCard content={content} />
             </div>
           ))}
+        </div>
+
+        {/* Mobile: 2 rows grid layout */}
+        <div className="md:hidden overflow-x-auto scrollbar-hide pb-2 -mx-3 px-3">
+          <div className="grid grid-rows-2 grid-flow-col gap-2 auto-cols-[100px]">
+            {contents.map((content) => (
+              <div key={content.id} className="w-[100px]">
+                <ContentCard content={content} />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
