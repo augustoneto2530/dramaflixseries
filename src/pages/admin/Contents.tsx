@@ -101,22 +101,38 @@ export default function AdminContents() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.title) {
+    if (!formData.title.trim()) {
       toast({ title: 'Erro', description: 'Título é obrigatório', variant: 'destructive' });
       return;
     }
 
     setIsSubmitting(true);
     try {
+      // Prepare data with proper defaults
+      const dataToSave = {
+        title: formData.title.trim(),
+        description: formData.description || null,
+        category: formData.category,
+        cover_image_url: formData.cover_image_url || null,
+        banner_image_url: formData.banner_image_url || null,
+        rating: formData.rating || 0,
+        release_year: formData.release_year || new Date().getFullYear(),
+        is_featured: formData.is_featured || false,
+        is_trending: formData.is_trending || false,
+        is_new: formData.is_new ?? true,
+        is_adult: formData.is_adult || false,
+        total_episodes: formData.total_episodes || 1,
+      };
+
       if (selectedContent) {
         const { error } = await supabase
           .from('contents')
-          .update(formData)
+          .update(dataToSave)
           .eq('id', selectedContent.id);
         if (error) throw error;
         toast({ title: 'Sucesso', description: 'Conteúdo atualizado!' });
       } else {
-        const { error } = await supabase.from('contents').insert(formData);
+        const { error } = await supabase.from('contents').insert(dataToSave);
         if (error) throw error;
         toast({ title: 'Sucesso', description: 'Conteúdo adicionado!' });
       }
@@ -124,9 +140,9 @@ export default function AdminContents() {
       setIsDialogOpen(false);
       resetForm();
       fetchContents();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving content:', err);
-      toast({ title: 'Erro', description: 'Erro ao salvar conteúdo', variant: 'destructive' });
+      toast({ title: 'Erro', description: err?.message || 'Erro ao salvar conteúdo', variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
     }
@@ -340,15 +356,31 @@ export default function AdminContents() {
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Nota (0-10)</Label>
-                <Input type="number" min="0" max="10" step="0.1" value={formData.rating} onChange={(e) => setFormData(prev => ({ ...prev, rating: parseFloat(e.target.value) }))} />
+                <Input 
+                  type="number" 
+                  min="0" 
+                  max="10" 
+                  step="0.1" 
+                  value={formData.rating || ''} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, rating: e.target.value ? parseFloat(e.target.value) : 0 }))} 
+                />
               </div>
               <div className="space-y-2">
                 <Label>Ano</Label>
-                <Input type="number" value={formData.release_year} onChange={(e) => setFormData(prev => ({ ...prev, release_year: parseInt(e.target.value) }))} />
+                <Input 
+                  type="number" 
+                  value={formData.release_year || ''} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, release_year: e.target.value ? parseInt(e.target.value) : new Date().getFullYear() }))} 
+                />
               </div>
               <div className="space-y-2">
                 <Label>Total Episódios</Label>
-                <Input type="number" min="1" value={formData.total_episodes} onChange={(e) => setFormData(prev => ({ ...prev, total_episodes: parseInt(e.target.value) }))} />
+                <Input 
+                  type="number" 
+                  min="1" 
+                  value={formData.total_episodes || ''} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, total_episodes: e.target.value ? parseInt(e.target.value) : 1 }))} 
+                />
               </div>
             </div>
             <div className="flex flex-wrap gap-6">
