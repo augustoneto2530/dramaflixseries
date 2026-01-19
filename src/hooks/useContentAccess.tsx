@@ -54,6 +54,12 @@ export function useContentAccess() {
       return { hasAccess: false, accessType: 'none', purchasedContentIds };
     }
 
+    // Check for single content purchase FIRST - even for adult content
+    // This allows users with single_content purchases to access their specific content
+    if (purchasedContentIds.includes(content.id)) {
+      return { hasAccess: true, accessType: 'single_content', purchasedContentIds };
+    }
+
     // VIP has full access
     if (profile.is_vip) {
       return { hasAccess: true, accessType: 'full', purchasedContentIds };
@@ -79,11 +85,6 @@ export function useContentAccess() {
       return { hasAccess: true, accessType: 'full', purchasedContentIds };
     }
 
-    // Check for single content purchase
-    if (purchasedContentIds.includes(content.id)) {
-      return { hasAccess: true, accessType: 'single_content', purchasedContentIds };
-    }
-
     // No access
     return { hasAccess: false, accessType: 'none', purchasedContentIds };
   }, [user, profile, isAdmin, purchasedContentIds]);
@@ -95,22 +96,22 @@ export function useContentAccess() {
       return null;
     }
 
-    // Monthly user trying to access adult content
-    if (profile?.subscription_status === 'active' && 
-        profile?.plan_type === 'monthly' && 
-        content.is_adult && 
-        !profile?.has_adult_access) {
-      return 'adult';
+    // If it's adult content and user doesn't have single_content purchase for it
+    // Monthly users without adult access trying to view adult content
+    if (content.is_adult) {
+      // Check if user has subscription but no adult access
+      if (profile?.subscription_status === 'active' && !profile?.has_adult_access) {
+        return 'adult';
+      }
+      // No subscription at all but content is adult - show adult popup
+      if (!profile?.subscription_status || profile?.subscription_status !== 'active') {
+        return 'adult';
+      }
     }
 
-    // User with only single content purchases
-    if (purchasedContentIds.length > 0 && !purchasedContentIds.includes(content.id)) {
-      return 'premium';
-    }
-
-    // No subscription at all
+    // No subscription at all - premium popup
     return 'premium';
-  }, [profile, purchasedContentIds, checkContentAccess]);
+  }, [profile, checkContentAccess]);
 
   return {
     checkContentAccess,

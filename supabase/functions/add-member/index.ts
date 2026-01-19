@@ -61,6 +61,7 @@ Deno.serve(async (req) => {
     };
 
     // Create a purchase_webhooks entry so the user can access the platform
+    // Mark as NOT processed so process-user-purchases can handle it on first login
     const { data: webhookData, error: webhookError } = await supabase
       .from('purchase_webhooks')
       .insert({
@@ -75,8 +76,7 @@ Deno.serve(async (req) => {
           include_adult_access: includeAdultAccess || false,
           content_id: contentId || null,
         },
-        processed: true,
-        processed_at: new Date().toISOString(),
+        processed: false, // Not processed yet - will be processed on first login
       })
       .select()
       .single();
