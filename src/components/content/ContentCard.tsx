@@ -25,7 +25,7 @@ const categoryStyles: Record<ContentCategory, string> = {
 export function ContentCard({ content, variant = 'default' }: ContentCardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { checkContentAccess, getBlockedReason } = useContentAccess();
+  const { checkContentAccess, getBlockedReason, getPurchasedContentTitle } = useContentAccess();
   const [showAccessPopup, setShowAccessPopup] = useState(false);
   const [hasTrackedClick, setHasTrackedClick] = useState(false);
   
@@ -132,6 +132,7 @@ export function ContentCard({ content, variant = 'default' }: ContentCardProps) 
         open={showAccessPopup}
         onOpenChange={setShowAccessPopup}
         type={blockedReason || 'premium'}
+        purchasedContentTitle={getPurchasedContentTitle()}
       />
     </>
   );
