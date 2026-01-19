@@ -57,12 +57,14 @@ export default function Index() {
 
   // Filter contents by category and flags - matching kdramatv.app order
   const featuredContents = allContents.filter(c => c.is_featured);
-  const trendingContents = allContents.filter(c => c.is_trending);
+  const adultContents = allContents.filter(c => c.category === 'adult');
+  const nonAdultTrending = allContents.filter(c => c.is_trending && c.category !== 'adult');
+  // Em Alta = Adult contents first, then other trending contents
+  const trendingContents = [...adultContents, ...nonAdultTrending];
   const newContents = allContents.filter(c => c.is_new);
   const doramasContents = allContents.filter(c => c.category === 'doramas');
   const seriesContents = allContents.filter(c => c.category === 'series');
   const filmesContents = allContents.filter(c => c.category === 'filmes');
-  const adultContents = allContents.filter(c => c.category === 'adult');
   const novelasContents = allContents.filter(c => c.category === 'novelas');
 
   if (loading) {
