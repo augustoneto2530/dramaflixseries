@@ -59,8 +59,26 @@ export default function Index() {
   const featuredContents = allContents.filter(c => c.is_featured);
   const adultContents = allContents.filter(c => c.category === 'adult');
   const nonAdultTrending = allContents.filter(c => c.is_trending && c.category !== 'adult');
-  // Em Alta = Adult contents first, then other trending contents
-  const trendingContents = [...adultContents, ...nonAdultTrending];
+  
+  // Em Alta = Custom order: "A Esposa Virgem do Mafioso" first, "Ligada a Honra" second, then adult contents, then other trending
+  const priorityTitles = ['a esposa virgem do mafioso', 'ligada a honra'];
+  const sortedTrendingContents = [...adultContents, ...nonAdultTrending].sort((a, b) => {
+    const aTitle = a.title.toLowerCase();
+    const bTitle = b.title.toLowerCase();
+    const aIndex = priorityTitles.findIndex(t => aTitle.includes(t));
+    const bIndex = priorityTitles.findIndex(t => bTitle.includes(t));
+    
+    // If both have priority, sort by priority order
+    if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+    // If only a has priority, a comes first
+    if (aIndex !== -1) return -1;
+    // If only b has priority, b comes first
+    if (bIndex !== -1) return 1;
+    // Otherwise maintain original order
+    return 0;
+  });
+  const trendingContents = sortedTrendingContents;
+  
   const newContents = allContents.filter(c => c.is_new);
   const doramasContents = allContents.filter(c => c.category === 'doramas');
   const seriesContents = allContents.filter(c => c.category === 'series');
