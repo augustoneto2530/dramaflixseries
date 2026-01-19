@@ -4,9 +4,12 @@ import { HeroSlider } from '@/components/content/HeroSlider';
 import { ContentCarousel } from '@/components/content/ContentCarousel';
 import { Content } from '@/lib/types';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Index() {
+  const { user } = useAuth();
   const [allContents, setAllContents] = useState<Content[]>([]);
+  const [purchasedContents, setPurchasedContents] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,6 +38,42 @@ export default function Index() {
     fetchContents();
   }, []);
 
+  // Fetch user's purchased content
+  useEffect(() => {
+    const fetchPurchasedContents = async () => {
+      if (!user) {
+        setPurchasedContents([]);
+        return;
+      }
+
+      try {
+        const { data: purchases, error } = await supabase
+          .from('user_content_purchases')
+          .select('content_id')
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Error fetching purchases:', error);
+          return;
+        }
+
+        if (purchases && purchases.length > 0) {
+          const contentIds = purchases.map(p => p.content_id);
+          const purchasedItems = allContents.filter(c => contentIds.includes(c.id));
+          setPurchasedContents(purchasedItems);
+        } else {
+          setPurchasedContents([]);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+
+    if (allContents.length > 0) {
+      fetchPurchasedContents();
+    }
+  }, [user, allContents]);
+
   // Filter contents by category and flags
   const featuredContents = allContents.filter(c => c.is_featured);
   const trendingContents = allContents.filter(c => c.is_trending);
@@ -61,6 +100,15 @@ export default function Index() {
 
       {/* Content Sections */}
       <div className="space-y-0 pb-20 md:pb-12">
+        {/* Show purchased content first if user has any */}
+        {purchasedContents.length > 0 && (
+          <ContentCarousel
+            title="Seus Conteúdos"
+            contents={purchasedContents}
+            icon="sparkles"
+          />
+        )}
+
         <ContentCarousel
           title="Em Alta"
           contents={trendingContents}
