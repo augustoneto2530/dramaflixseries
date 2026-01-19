@@ -12,21 +12,38 @@ export default function Index() {
   const [purchasedContents, setPurchasedContents] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Fetch all contents and purchased contents in parallel for faster loading
   useEffect(() => {
-    const fetchContents = async () => {
+    const fetchData = async () => {
       try {
-        const { data, error } = await supabase
-          .from('contents')
-          .select('*')
-          .order('created_at', { ascending: false });
+        // Run both queries in parallel
+        const [contentsResult, purchasesResult] = await Promise.all([
+          supabase
+            .from('contents')
+            .select('*')
+            .order('created_at', { ascending: false }),
+          user
+            ? supabase
+                .from('user_content_purchases')
+                .select('content_id, contents(*)')
+                .eq('user_id', user.id)
+            : Promise.resolve({ data: null, error: null })
+        ]);
 
-        if (error) {
-          console.error('Error fetching contents:', error);
-          return;
+        if (contentsResult.error) {
+          console.error('Error fetching contents:', contentsResult.error);
+        } else if (contentsResult.data) {
+          setAllContents(contentsResult.data as Content[]);
         }
 
-        if (data) {
-          setAllContents(data as Content[]);
+        // Process purchased contents immediately from the join query
+        if (purchasesResult.data && purchasesResult.data.length > 0) {
+          const purchased = purchasesResult.data
+            .map((p: any) => p.contents)
+            .filter(Boolean) as Content[];
+          setPurchasedContents(purchased);
+        } else {
+          setPurchasedContents([]);
         }
       } catch (error) {
         console.error('Error:', error);
@@ -35,44 +52,8 @@ export default function Index() {
       }
     };
 
-    fetchContents();
-  }, []);
-
-  // Fetch user's purchased content
-  useEffect(() => {
-    const fetchPurchasedContents = async () => {
-      if (!user) {
-        setPurchasedContents([]);
-        return;
-      }
-
-      try {
-        const { data: purchases, error } = await supabase
-          .from('user_content_purchases')
-          .select('content_id')
-          .eq('user_id', user.id);
-
-        if (error) {
-          console.error('Error fetching purchases:', error);
-          return;
-        }
-
-        if (purchases && purchases.length > 0) {
-          const contentIds = purchases.map(p => p.content_id);
-          const purchasedItems = allContents.filter(c => contentIds.includes(c.id));
-          setPurchasedContents(purchasedItems);
-        } else {
-          setPurchasedContents([]);
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
-
-    if (allContents.length > 0) {
-      fetchPurchasedContents();
-    }
-  }, [user, allContents]);
+    fetchData();
+  }, [user]);
 
   // Filter contents by category and flags
   const featuredContents = allContents.filter(c => c.is_featured);
