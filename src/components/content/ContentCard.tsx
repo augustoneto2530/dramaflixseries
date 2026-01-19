@@ -78,46 +78,52 @@ export function ContentCard({ content, variant = 'default' }: ContentCardProps) 
 
         {/* No visual lock overlay - popup appears on click instead */}
 
-        {/* Rating Badge - Top Right */}
-        <div className="absolute top-1 right-1 md:top-2 md:right-2">
-          <div className="flex items-center gap-0.5 bg-background/80 backdrop-blur-sm rounded-full px-1 py-0.5 md:px-1.5">
-            <Star className="h-2 w-2 md:h-3 md:w-3 fill-accent text-accent" />
-            <span className="text-[8px] md:text-[10px] font-medium">{content.rating}</span>
+        {/* Rating Badge - Top Right - Matching kdramatv.app style */}
+        <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2 z-10">
+          <div className="flex items-center gap-0.5 bg-black/70 backdrop-blur-sm rounded px-1.5 py-0.5">
+            <Star className="h-2.5 w-2.5 md:h-3 md:w-3 fill-yellow-400 text-yellow-400" />
+            <span className="text-[10px] md:text-xs font-semibold text-white">{content.rating}</span>
           </div>
         </div>
 
-        {/* Category Badge - Top Left */}
-        <div className="absolute top-1 left-1 md:top-2 md:left-2 flex flex-col gap-0.5">
+        {/* Category/Tags Badge - Top Left - Matching kdramatv.app style */}
+        <div className="absolute top-1.5 left-1.5 md:top-2 md:left-2 flex flex-col gap-1 z-10">
           {content.is_new && (
-            <span className="category-badge bg-destructive/90 text-destructive-foreground text-[6px] md:text-[8px] px-1 py-0.5 rounded">
-              LANÇAMENTO
+            <span className="inline-block bg-red-500 text-white text-[8px] md:text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">
+              Lançamento
             </span>
           )}
-          <span className={cn('category-badge text-[6px] md:text-[8px] px-1 py-0.5 rounded', categoryStyles[content.category])}>
+          {/* Show first tag if exists - like DUBLADO, EXCLUSIVO */}
+          {content.tags && content.tags.length > 0 && content.tags[0] && (
+            <span className="inline-block bg-yellow-500 text-black text-[8px] md:text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">
+              {content.tags[0]}
+            </span>
+          )}
+          <span className={cn(
+            'inline-block text-[8px] md:text-[10px] font-semibold px-1.5 py-0.5 rounded',
+            categoryStyles[content.category]
+          )}>
             {CATEGORY_LABELS[content.category]}
           </span>
         </div>
 
-        {/* Hover Overlay with Play Button - always show, popup appears on click if blocked */}
+        {/* Hover Overlay with Play Button - matching kdramatv.app style */}
         <Link 
           to={isBlocked ? '#' : `/assistir/${content.id}`}
           onClick={handleClick}
-          className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"
+          className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-lg flex items-center justify-center"
         >
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Button size="sm" className="brand-gradient glow-primary h-7 md:h-9 px-2 md:px-3 text-[10px] md:text-xs">
-              <Play className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 fill-white" />
+          <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+            <Button size="sm" className="brand-gradient glow-primary h-8 md:h-10 px-3 md:px-4 text-xs md:text-sm font-medium">
+              <Play className="h-3 w-3 md:h-4 md:w-4 mr-1 fill-white" />
               Assistir
             </Button>
           </div>
         </Link>
 
-        {/* Title - Bottom */}
-        <div className="absolute bottom-0 left-0 right-0 p-1.5 md:p-2 bg-gradient-to-t from-background via-background/80 to-transparent rounded-b-lg">
-          <h3 className="font-medium text-[8px] md:text-[11px] line-clamp-2 leading-tight">{content.title}</h3>
-          {content.release_year && (
-            <p className="text-[7px] md:text-[9px] text-muted-foreground mt-0.5">{content.release_year}</p>
-          )}
+        {/* Title - Bottom - Matching kdramatv.app style */}
+        <div className="absolute bottom-0 left-0 right-0 p-2 md:p-3 bg-gradient-to-t from-black via-black/70 to-transparent rounded-b-lg">
+          <h3 className="font-semibold text-[10px] md:text-sm text-white line-clamp-2 leading-snug">{content.title}</h3>
         </div>
       </div>
 

@@ -167,37 +167,32 @@
   }
 
   .category-badge {
-    @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
+    @apply inline-flex items-center rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide;
   }
 
   .category-doramas {
-    background: hsl(var(--category-doramas) / 0.2);
-    color: hsl(var(--category-doramas));
-    border: 1px solid hsl(var(--category-doramas) / 0.3);
+    background: hsl(280 85% 55%);
+    color: white;
   }
 
   .category-adult {
-    background: hsl(var(--category-adult) / 0.2);
-    color: hsl(var(--category-adult));
-    border: 1px solid hsl(var(--category-adult) / 0.3);
+    background: hsl(0 75% 50%);
+    color: white;
   }
 
   .category-novelas {
-    background: hsl(var(--category-novelas) / 0.2);
-    color: hsl(var(--category-novelas));
-    border: 1px solid hsl(var(--category-novelas) / 0.3);
+    background: hsl(330 80% 55%);
+    color: white;
   }
 
   .category-filmes {
-    background: hsl(var(--category-filmes) / 0.2);
-    color: hsl(var(--category-filmes));
-    border: 1px solid hsl(var(--category-filmes) / 0.3);
+    background: hsl(195 90% 45%);
+    color: white;
   }
 
   .category-series {
-    background: hsl(var(--category-series) / 0.2);
-    color: hsl(var(--category-series));
-    border: 1px solid hsl(var(--category-series) / 0.3);
+    background: hsl(142 70% 45%);
+    color: white;
   }
 
   .scrollbar-hide {

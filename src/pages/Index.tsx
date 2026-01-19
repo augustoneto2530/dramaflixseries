@@ -55,7 +55,7 @@ export default function Index() {
     fetchData();
   }, [user]);
 
-  // Filter contents by category and flags
+  // Filter contents by category and flags - matching kdramatv.app order
   const featuredContents = allContents.filter(c => c.is_featured);
   const trendingContents = allContents.filter(c => c.is_trending);
   const newContents = allContents.filter(c => c.is_new);
@@ -63,6 +63,7 @@ export default function Index() {
   const seriesContents = allContents.filter(c => c.category === 'series');
   const filmesContents = allContents.filter(c => c.category === 'filmes');
   const adultContents = allContents.filter(c => c.category === 'adult');
+  const novelasContents = allContents.filter(c => c.category === 'novelas');
 
   if (loading) {
     return (
@@ -79,7 +80,7 @@ export default function Index() {
       {/* Hero Slider */}
       <HeroSlider contents={featuredContents.length > 0 ? featuredContents : allContents.slice(0, 5)} />
 
-      {/* Content Sections */}
+      {/* Content Sections - Order matching kdramatv.app */}
       <div className="space-y-0 pb-20 md:pb-12">
         {/* Show purchased content first if user has any */}
         {purchasedContents.length > 0 && (
@@ -90,34 +91,48 @@ export default function Index() {
           />
         )}
 
+        {/* Em Alta (Trending) - First section like kdramatv.app */}
         <ContentCarousel
           title="Em Alta"
-          contents={trendingContents}
+          contents={trendingContents.length > 0 ? trendingContents : allContents.slice(0, 10)}
           icon="flame"
         />
 
+        {/* Lançamentos (New Releases) */}
         <ContentCarousel
           title="Lançamentos"
-          contents={newContents}
+          contents={newContents.length > 0 ? newContents : allContents.filter(c => c.is_new).slice(0, 10)}
           icon="sparkles"
         />
 
+        {/* Doramas */}
         <ContentCarousel
           title="Doramas"
           contents={doramasContents}
         />
 
+        {/* Séries */}
         <ContentCarousel
           title="Séries"
           contents={seriesContents}
         />
 
+        {/* Filmes - Single row on mobile like kdramatv.app */}
         <ContentCarousel
           title="Filmes"
           contents={filmesContents}
           mobileRows={1}
         />
 
+        {/* Novelas */}
+        {novelasContents.length > 0 && (
+          <ContentCarousel
+            title="Novelas"
+            contents={novelasContents}
+          />
+        )}
+
+        {/* +18 - 4 rows on mobile for massive catalog */}
         <ContentCarousel
           title="+18"
           contents={adultContents}
