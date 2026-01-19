@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { HeroSlider } from '@/components/content/HeroSlider';
 import { ContentCarousel } from '@/components/content/ContentCarousel';
@@ -10,35 +10,52 @@ export default function Index() {
   const { user } = useAuth();
   const [allContents, setAllContents] = useState<Content[]>([]);
   const [purchasedContents, setPurchasedContents] = useState<Content[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingContents, setLoadingContents] = useState(true);
+  const [loadingPurchases, setLoadingPurchases] = useState(false);
 
-  // Fetch all contents and purchased contents in parallel for faster loading
+  // Fetch all contents immediately (no dependency on user)
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchContents = async () => {
       try {
-        // Run both queries in parallel
-        const [contentsResult, purchasesResult] = await Promise.all([
-          supabase
-            .from('contents')
-            .select('*')
-            .order('created_at', { ascending: false }),
-          user
-            ? supabase
-                .from('user_content_purchases')
-                .select('content_id, contents(*)')
-                .eq('user_id', user.id)
-            : Promise.resolve({ data: null, error: null })
-        ]);
+        const { data, error } = await supabase
+          .from('contents')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-        if (contentsResult.error) {
-          console.error('Error fetching contents:', contentsResult.error);
-        } else if (contentsResult.data) {
-          setAllContents(contentsResult.data as Content[]);
+        if (error) {
+          console.error('Error fetching contents:', error);
+        } else if (data) {
+          setAllContents(data as Content[]);
         }
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoadingContents(false);
+      }
+    };
 
-        // Process purchased contents immediately from the join query
-        if (purchasesResult.data && purchasesResult.data.length > 0) {
-          const purchased = purchasesResult.data
+    fetchContents();
+  }, []);
+
+  // Fetch purchased contents immediately when user is available (separate effect)
+  useEffect(() => {
+    if (!user) {
+      setPurchasedContents([]);
+      return;
+    }
+
+    const fetchPurchases = async () => {
+      setLoadingPurchases(true);
+      try {
+        const { data, error } = await supabase
+          .from('user_content_purchases')
+          .select('content_id, contents(*)')
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Error fetching purchases:', error);
+        } else if (data && data.length > 0) {
+          const purchased = data
             .map((p: any) => p.contents)
             .filter(Boolean) as Content[];
           setPurchasedContents(purchased);
@@ -48,44 +65,45 @@ export default function Index() {
       } catch (error) {
         console.error('Error:', error);
       } finally {
-        setLoading(false);
+        setLoadingPurchases(false);
       }
     };
 
-    fetchData();
+    fetchPurchases();
   }, [user]);
 
-  // Filter contents by category and flags - matching kdramatv.app order
-  const featuredContents = allContents.filter(c => c.is_featured);
-  const adultContents = allContents.filter(c => c.category === 'adult');
-  const nonAdultTrending = allContents.filter(c => c.is_trending && c.category !== 'adult');
-  
-  // Em Alta = Custom order: "A Esposa Virgem do Mafioso" first, "Ligada a Honra" second, then adult contents, then other trending
-  const priorityTitles = ['a esposa virgem do mafioso', 'ligada a honra'];
-  const sortedTrendingContents = [...adultContents, ...nonAdultTrending].sort((a, b) => {
-    const aTitle = a.title.toLowerCase();
-    const bTitle = b.title.toLowerCase();
-    const aIndex = priorityTitles.findIndex(t => aTitle.includes(t));
-    const bIndex = priorityTitles.findIndex(t => bTitle.includes(t));
+  // Memoize filtered contents for performance
+  const { featuredContents, trendingContents, newContents, doramasContents, seriesContents, filmesContents, novelasContents, adultContents } = useMemo(() => {
+    const featured = allContents.filter(c => c.is_featured);
+    const adult = allContents.filter(c => c.category === 'adult');
+    const nonAdultTrending = allContents.filter(c => c.is_trending && c.category !== 'adult');
     
-    // If both have priority, sort by priority order
-    if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-    // If only a has priority, a comes first
-    if (aIndex !== -1) return -1;
-    // If only b has priority, b comes first
-    if (bIndex !== -1) return 1;
-    // Otherwise maintain original order
-    return 0;
-  });
-  const trendingContents = sortedTrendingContents;
-  
-  const newContents = allContents.filter(c => c.is_new);
-  const doramasContents = allContents.filter(c => c.category === 'doramas');
-  const seriesContents = allContents.filter(c => c.category === 'series');
-  const filmesContents = allContents.filter(c => c.category === 'filmes');
-  const novelasContents = allContents.filter(c => c.category === 'novelas');
+    const priorityTitles = ['a esposa virgem do mafioso', 'ligada a honra'];
+    const sortedTrending = [...adult, ...nonAdultTrending].sort((a, b) => {
+      const aTitle = a.title.toLowerCase();
+      const bTitle = b.title.toLowerCase();
+      const aIndex = priorityTitles.findIndex(t => aTitle.includes(t));
+      const bIndex = priorityTitles.findIndex(t => bTitle.includes(t));
+      
+      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+      return 0;
+    });
 
-  if (loading) {
+    return {
+      featuredContents: featured,
+      trendingContents: sortedTrending,
+      newContents: allContents.filter(c => c.is_new),
+      doramasContents: allContents.filter(c => c.category === 'doramas'),
+      seriesContents: allContents.filter(c => c.category === 'series'),
+      filmesContents: allContents.filter(c => c.category === 'filmes'),
+      novelasContents: allContents.filter(c => c.category === 'novelas'),
+      adultContents: adult
+    };
+  }, [allContents]);
+
+  if (loadingContents) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
