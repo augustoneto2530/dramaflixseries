@@ -211,6 +211,20 @@ export default function Auth() {
         return;
       }
 
+      // Get the new user's ID and process any pending purchases
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.user?.id) {
+        console.log('Processing pending purchases for new user:', sessionData.session.user.id);
+        try {
+          await supabase.functions.invoke('process-user-purchases', {
+            body: { email, userId: sessionData.session.user.id }
+          });
+        } catch (purchaseErr) {
+          console.error('Error processing purchases:', purchaseErr);
+          // Continue anyway - purchases can be processed later
+        }
+      }
+
       toast({
         title: 'Conta criada com sucesso!',
         description: 'Bem-vindo ao Drama_Flix!',
