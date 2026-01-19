@@ -49,11 +49,11 @@ export function HeroSlider({ contents }: HeroSliderProps) {
   return (
     <section className="relative h-[50vh] min-h-[300px] md:h-[70vh] md:min-h-[500px] max-h-[800px] overflow-hidden">
       {/* Background Image */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 bg-background">
         <img
           src={currentContent.banner_image_url || currentContent.cover_image_url || '/placeholder.svg'}
           alt={currentContent.title}
-          className="w-full h-full object-cover transition-opacity duration-500"
+          className="w-full h-full object-contain transition-opacity duration-500"
         />
         <div className="hero-overlay absolute inset-0" />
         <div className="hero-overlay-bottom absolute inset-0" />
