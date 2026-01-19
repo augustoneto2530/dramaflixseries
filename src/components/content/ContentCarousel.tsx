@@ -38,11 +38,17 @@ export function ContentCarousel({ title, contents, icon, mobileRows = 2 }: Conte
         <div className="flex items-center justify-between mb-3 md:mb-5">
           <div className="flex items-center gap-2 md:gap-3">
             {Icon && (
-              <div className="w-7 h-7 md:w-9 md:h-9 rounded-full brand-gradient flex items-center justify-center shadow-lg">
-                <Icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-white" />
+              <div className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center shadow-lg ${
+                icon === 'flame' 
+                  ? 'bg-gradient-to-br from-orange-500 to-orange-600' 
+                  : 'brand-gradient'
+              }`}>
+                <Icon className={`h-5 w-5 md:h-6 md:w-6 ${
+                  icon === 'flame' ? 'text-white' : 'text-white'
+                }`} />
               </div>
             )}
-            <h2 className="text-base md:text-2xl font-bold text-white">{title}</h2>
+            <h2 className="text-lg md:text-2xl font-bold text-white">{title}</h2>
           </div>
 
           {/* Navigation Buttons - Desktop only - Matching kdramatv.app style */}
