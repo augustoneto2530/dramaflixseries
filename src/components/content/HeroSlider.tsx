@@ -47,16 +47,17 @@ export function HeroSlider({ contents }: HeroSliderProps) {
   const currentContent = contents[currentIndex];
 
   return (
-    <section className="relative h-[50vh] min-h-[300px] md:h-[70vh] md:min-h-[500px] max-h-[800px] overflow-hidden">
+    <section className="relative h-[70vh] min-h-[400px] md:h-[80vh] md:min-h-[550px] max-h-[900px] overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 bg-background">
         <img
           src={currentContent.banner_image_url || currentContent.cover_image_url || '/placeholder.svg'}
           alt={currentContent.title}
-          className="w-full h-full object-contain transition-opacity duration-500"
+          className="w-full h-full object-cover object-top transition-opacity duration-500"
         />
-        <div className="hero-overlay absolute inset-0" />
-        <div className="hero-overlay-bottom absolute inset-0" />
+        {/* Gradient overlay from bottom for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
       </div>
 
       {/* Content */}
