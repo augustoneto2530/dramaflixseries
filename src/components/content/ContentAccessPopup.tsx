@@ -1,21 +1,129 @@
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Lock, Crown, Flame, Sparkles, X } from 'lucide-react';
+import { Lock, Crown, Flame, Sparkles, X, Play, Star, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface ContentAccessPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  type: 'premium' | 'adult';
+  type: 'premium' | 'adult' | 'single_content';
   adultPurchaseLink?: string;
+  purchasedContentTitle?: string;
 }
 
 const ADULT_ACCESS_LINK = 'https://pay.lowify.com.br/checkout?product_id=PfECsZ';
 const VIP_PLAN_LINK = 'https://pay.lowify.com.br/checkout?product_id=Z3NV2k';
 
-export function ContentAccessPopup({ open, onOpenChange, type, adultPurchaseLink }: ContentAccessPopupProps) {
+export function ContentAccessPopup({ open, onOpenChange, type, adultPurchaseLink, purchasedContentTitle }: ContentAccessPopupProps) {
   const isAdult = type === 'adult';
+  const isSingleContent = type === 'single_content';
   const purchaseLink = adultPurchaseLink || ADULT_ACCESS_LINK;
+
+  // Single content popup - for users who only purchased a specific title
+  if (isSingleContent) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md p-0 border-0 bg-transparent overflow-hidden">
+          <div className="relative rounded-2xl overflow-hidden">
+            {/* Background gradient - dark blue/teal gradient like reference */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#0a2a3a] via-[#0d3545] to-[#061a24]" />
+            
+            {/* Close button */}
+            <button 
+              onClick={() => onOpenChange(false)}
+              className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+            >
+              <X className="h-4 w-4 text-white/70" />
+            </button>
+
+            {/* Content */}
+            <div className="relative z-10 p-8 text-center">
+              {/* Crown icon */}
+              <div className="relative inline-block mb-4">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                  <Crown className="w-10 h-10 text-white" />
+                </div>
+              </div>
+
+              {/* Access badge - shows purchased content title */}
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-amber-400/20 border border-amber-400/50 rounded-full px-4 py-2 mb-6">
+                <Sparkles className="h-4 w-4 text-amber-400" />
+                <span className="text-sm font-semibold text-amber-400">
+                  Seu acesso: {purchasedContentTitle?.toUpperCase() || 'CONTEÚDO AVULSO'}
+                </span>
+              </div>
+
+              {/* Title */}
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Você tem acesso a apenas <span className="text-cyan-400">1 título</span>
+              </h2>
+
+              {/* Description */}
+              <p className="text-white/70 text-sm mb-4">
+                Todo o resto do catálogo ainda está <span className="text-amber-400 font-semibold">pendente de liberação</span>.
+                <br />
+                Desbloqueie tudo e aproveite mais de <span className="text-cyan-400 font-semibold">10.000 títulos</span>!
+              </p>
+
+              {/* Highlight banner */}
+              <div className="bg-gradient-to-r from-cyan-500/10 via-cyan-400/20 to-cyan-500/10 border border-cyan-400/30 rounded-xl px-4 py-3 mb-6">
+                <div className="flex items-center justify-center gap-2">
+                  <Sparkles className="h-4 w-4 text-cyan-400" />
+                  <span className="text-sm text-white/90">
+                    Novos conteúdos são lançados <span className="text-cyan-400 font-semibold">todos os dias</span>!
+                  </span>
+                </div>
+              </div>
+
+              {/* Benefits grid */}
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+                  <Play className="h-6 w-6 text-cyan-400 mx-auto mb-2" />
+                  <span className="text-xs text-white/70">+10.000 títulos</span>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+                  <Star className="h-6 w-6 text-amber-400 mx-auto mb-2" />
+                  <span className="text-xs text-white/70">Sem anúncios</span>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
+                  <ShieldCheck className="h-6 w-6 text-cyan-400 mx-auto mb-2" />
+                  <span className="text-xs text-white/70">Cancele quando quiser</span>
+                </div>
+              </div>
+
+              {/* Price */}
+              <p className="text-white/60 text-sm mb-2">A partir de</p>
+              <p className="text-3xl font-bold text-white mb-4">
+                R$<span className="text-cyan-400">10</span> <span className="text-base font-normal text-white/60">/mês</span>
+              </p>
+
+              {/* CTA Button */}
+              <Link to="/planos" className="block">
+                <Button className="w-full h-12 text-base font-semibold bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 shadow-lg shadow-cyan-500/30">
+                  <Crown className="w-5 h-5 mr-2" />
+                  Ver todos os planos
+                </Button>
+              </Link>
+
+              {/* Back button */}
+              <Button
+                variant="ghost"
+                onClick={() => onOpenChange(false)}
+                className="w-full text-white/60 hover:text-white hover:bg-white/10 mt-3"
+              >
+                Voltar
+              </Button>
+
+              {/* Footer text */}
+              <p className="text-white/40 text-xs mt-4">
+                Escolha o plano ideal para você e desbloqueie todo o catálogo
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   if (isAdult) {
     return (

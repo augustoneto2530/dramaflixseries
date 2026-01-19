@@ -9,29 +9,41 @@ interface ContentAccessResult {
   purchasedContentIds: string[];
 }
 
+interface PurchasedContent {
+  content_id: string;
+  title: string;
+}
+
 export function useContentAccess() {
   const { user, profile, isAdmin } = useAuth();
   const [purchasedContentIds, setPurchasedContentIds] = useState<string[]>([]);
+  const [purchasedContents, setPurchasedContents] = useState<PurchasedContent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchPurchasedContent = async () => {
       if (!user) {
         setPurchasedContentIds([]);
+        setPurchasedContents([]);
         setLoading(false);
         return;
       }
 
       try {
+        // Fetch purchased content with titles
         const { data, error } = await supabase
           .from('user_content_purchases')
-          .select('content_id')
+          .select('content_id, contents(title)')
           .eq('user_id', user.id);
 
         if (error) {
           console.error('Erro ao buscar compras:', error);
         } else {
           setPurchasedContentIds(data?.map(p => p.content_id) || []);
+          setPurchasedContents(data?.map(p => ({
+            content_id: p.content_id,
+            title: (p.contents as any)?.title || 'Conteúdo Avulso'
+          })) || []);
         }
       } catch (err) {
         console.error('Erro:', err);
@@ -42,6 +54,25 @@ export function useContentAccess() {
 
     fetchPurchasedContent();
   }, [user]);
+
+  // Check if user only has single_content access (no subscription)
+  const hasSingleContentOnly = useCallback((): boolean => {
+    if (!profile) return false;
+    
+    // User has no active subscription but has purchased content
+    const noActiveSubscription = !profile.is_vip && 
+      (profile.subscription_status !== 'active' || !profile.plan_type);
+    
+    return noActiveSubscription && purchasedContentIds.length > 0;
+  }, [profile, purchasedContentIds]);
+
+  // Get the first purchased content title for display
+  const getPurchasedContentTitle = useCallback((): string | undefined => {
+    if (purchasedContents.length > 0) {
+      return purchasedContents[0].title;
+    }
+    return undefined;
+  }, [purchasedContents]);
 
   const checkContentAccess = useCallback((content: Content): ContentAccessResult => {
     // Admin has full access
@@ -89,11 +120,16 @@ export function useContentAccess() {
     return { hasAccess: false, accessType: 'none', purchasedContentIds };
   }, [user, profile, isAdmin, purchasedContentIds]);
 
-  const getBlockedReason = useCallback((content: Content): 'premium' | 'adult' | null => {
+  const getBlockedReason = useCallback((content: Content): 'premium' | 'adult' | 'single_content' | null => {
     const accessResult = checkContentAccess(content);
     
     if (accessResult.hasAccess) {
       return null;
+    }
+
+    // User only has single content access - show single_content popup
+    if (hasSingleContentOnly()) {
+      return 'single_content';
     }
 
     // If it's adult content and user doesn't have single_content purchase for it
@@ -111,12 +147,15 @@ export function useContentAccess() {
 
     // No subscription at all - premium popup
     return 'premium';
-  }, [profile, checkContentAccess]);
+  }, [profile, checkContentAccess, hasSingleContentOnly]);
 
   return {
     checkContentAccess,
     getBlockedReason,
     purchasedContentIds,
+    purchasedContents,
+    hasSingleContentOnly,
+    getPurchasedContentTitle,
     loading
   };
 }
