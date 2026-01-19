@@ -8,8 +8,14 @@ export function MobileNavbar() {
   const { user } = useAuth();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[100] md:hidden bg-[#0a0d10] border-t border-white/10" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      <div className="flex items-center justify-around h-16">
+    <nav 
+      className="fixed bottom-0 left-0 right-0 z-[9999] md:hidden border-t border-white/10"
+      style={{ 
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        backgroundColor: '#000000'
+      }}
+    >
+      <div className="flex items-center justify-around h-16 bg-black">
         {/* Início */}
         <Link
           to="/"
