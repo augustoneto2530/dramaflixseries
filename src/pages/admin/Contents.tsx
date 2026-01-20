@@ -149,17 +149,25 @@ export default function AdminContents() {
   };
 
   const handleAddEpisode = async () => {
-    if (!selectedContent || !episodeForm.video_url) {
+    if (!selectedContent || !episodeForm.video_url.trim()) {
       toast({ title: 'Erro', description: 'URL do vídeo é obrigatória', variant: 'destructive' });
       return;
     }
 
+    // Coerce/normalize values to avoid NaN and empty-string issues
+    const episodeToSave: Omit<Episode, 'id' | 'created_at' | 'updated_at'> = {
+      content_id: selectedContent.id,
+      episode_number: Number.isFinite(episodeForm.episode_number) && episodeForm.episode_number >= 1 ? episodeForm.episode_number : 1,
+      title: episodeForm.title.trim() ? episodeForm.title.trim() : null,
+      description: episodeForm.description?.trim() ? episodeForm.description.trim() : null,
+      video_url: episodeForm.video_url.trim(),
+      thumbnail_url: episodeForm.thumbnail_url.trim() ? episodeForm.thumbnail_url.trim() : null,
+      duration_minutes: Number.isFinite(episodeForm.duration_minutes) && episodeForm.duration_minutes >= 0 ? episodeForm.duration_minutes : null,
+    };
+
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('episodes').insert({
-        ...episodeForm,
-        content_id: selectedContent.id,
-      });
+      const { error } = await supabase.from('episodes').insert(episodeToSave);
       if (error) throw error;
       toast({ title: 'Sucesso', description: 'Episódio adicionado!' });
       setIsEpisodeDialogOpen(false);
@@ -171,9 +179,9 @@ export default function AdminContents() {
         thumbnail_url: '',
         duration_minutes: 0,
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error adding episode:', err);
-      toast({ title: 'Erro', description: 'Erro ao adicionar episódio', variant: 'destructive' });
+      toast({ title: 'Erro', description: err?.message || 'Erro ao adicionar episódio', variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
     }
@@ -420,11 +428,31 @@ export default function AdminContents() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Número do Episódio</Label>
-                <Input type="number" min="1" value={episodeForm.episode_number} onChange={(e) => setEpisodeForm(prev => ({ ...prev, episode_number: parseInt(e.target.value) }))} />
+                <Input
+                  type="number"
+                  min="1"
+                  value={episodeForm.episode_number || ''}
+                  onChange={(e) =>
+                    setEpisodeForm((prev) => ({
+                      ...prev,
+                      episode_number: e.target.value ? parseInt(e.target.value) : 1,
+                    }))
+                  }
+                />
               </div>
               <div className="space-y-2">
                 <Label>Duração (minutos)</Label>
-                <Input type="number" min="0" value={episodeForm.duration_minutes} onChange={(e) => setEpisodeForm(prev => ({ ...prev, duration_minutes: parseInt(e.target.value) }))} />
+                <Input
+                  type="number"
+                  min="0"
+                  value={episodeForm.duration_minutes ?? ''}
+                  onChange={(e) =>
+                    setEpisodeForm((prev) => ({
+                      ...prev,
+                      duration_minutes: e.target.value ? parseInt(e.target.value) : 0,
+                    }))
+                  }
+                />
               </div>
             </div>
             <div className="space-y-2">
