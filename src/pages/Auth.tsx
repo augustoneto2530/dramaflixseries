@@ -297,7 +297,7 @@ export default function Auth() {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         // Supabase recovery links provide tokens in the URL hash (#...type=recovery)
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${window.location.origin}/login`,
       });
 
       if (error) {
@@ -378,7 +378,7 @@ export default function Auth() {
       });
 
       // Remove hash params after success (avoid looping back into update mode)
-      window.history.replaceState({}, document.title, '/auth');
+      window.history.replaceState({}, document.title, '/login');
       navigate('/');
     } finally {
       setIsLoading(false);
