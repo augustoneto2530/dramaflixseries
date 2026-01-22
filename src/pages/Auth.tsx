@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, CheckCircle, ArrowRight, Loader2, User, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,25 @@ export default function Auth() {
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Prefill email from querystring (?email=...) for faster access
+  useEffect(() => {
+    const hash = window.location.hash || '';
+    const url = new URL(window.location.href);
+    const isRecovery =
+      hash.includes('type=recovery') ||
+      url.searchParams.get('type') === 'recovery' ||
+      url.searchParams.get('reset') === 'true';
+
+    if (isRecovery) return;
+    if (email.trim()) return;
+
+    const qpEmail = searchParams.get('email');
+    if (!qpEmail) return;
+
+    setEmail(qpEmail.trim().toLowerCase());
+  }, [searchParams, email]);
 
   // If user comes from password recovery email, force "update-password" step
   useEffect(() => {
