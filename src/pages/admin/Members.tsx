@@ -47,6 +47,7 @@ export default function AdminMembers() {
   const [contents, setContents] = useState<{id: string, title: string}[]>([]);
   const [isLoadingContents, setIsLoadingContents] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [usersWithSingleContent, setUsersWithSingleContent] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!isLoading && (!user || !isAdmin)) navigate('/entrar');
@@ -56,8 +57,24 @@ export default function AdminMembers() {
     if (isAdmin) {
       fetchMembers();
       fetchContents();
+      fetchUsersWithSingleContent();
     }
   }, [isAdmin]);
+
+  const fetchUsersWithSingleContent = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_content_purchases')
+        .select('user_id');
+      
+      if (error) throw error;
+      
+      const userIds = new Set(data?.map(p => p.user_id) || []);
+      setUsersWithSingleContent(userIds);
+    } catch (err) {
+      console.error('Error fetching users with single content:', err);
+    }
+  };
 
   const fetchContents = async () => {
     setIsLoadingContents(true);
@@ -272,7 +289,7 @@ export default function AdminMembers() {
       case 'adult':
         return m.has_adult_access;
       case 'partial':
-        return m.plan_type === 'single_content';
+        return usersWithSingleContent.has(m.user_id);
       case 'vip':
         return m.is_vip;
       default:
@@ -285,7 +302,7 @@ export default function AdminMembers() {
     monthly: members.filter(m => m.subscription_status === 'active' && m.plan_type === 'monthly').length,
     annual: members.filter(m => m.subscription_status === 'active' && m.plan_type === 'annual').length,
     adult: members.filter(m => m.has_adult_access).length,
-    partial: members.filter(m => m.plan_type === 'single_content').length,
+    partial: members.filter(m => usersWithSingleContent.has(m.user_id)).length,
     vip: members.filter(m => m.is_vip).length,
   };
 
