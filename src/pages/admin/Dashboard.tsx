@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Users, Film, Webhook, Activity, Crown, TrendingUp, Calendar, Link2, MousePointer } from 'lucide-react';
+import { Users, Film, Webhook, Activity, Crown, TrendingUp, Calendar, Link2, MousePointer, Eye } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -123,6 +123,7 @@ export default function AdminDashboard() {
     { title: 'Membros', description: 'Gerenciar usuários e VIPs', icon: Users, href: '/admin/membros', color: 'bg-blue-500' },
     { title: 'Conteúdos', description: 'Gerenciar filmes e séries', icon: Film, href: '/admin/conteudos', color: 'bg-purple-500' },
     { title: 'Ranking de Cliques', description: 'Conteúdos mais populares', icon: MousePointer, href: '/admin/cliques', color: 'bg-cyan-500' },
+    { title: 'Visualizações', description: 'Estatísticas de audiência', icon: Eye, href: '/admin/visualizacoes', color: 'bg-emerald-500' },
     { title: 'Webhooks', description: 'Visualizar compras', icon: Webhook, href: '/admin/webhooks', color: 'bg-green-500' },
     { title: 'Gerador de Webhooks', description: 'Criar URLs para vendas avulsas', icon: Link2, href: '/admin/webhooks/gerar', color: 'bg-orange-500' },
   ];

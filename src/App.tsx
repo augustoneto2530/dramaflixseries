@@ -23,6 +23,7 @@ import AdminWebhooks from "./pages/admin/Webhooks";
 import AdminWebhookGenerator from "./pages/admin/WebhookGenerator";
 import AdminAdultAccess from "./pages/admin/AdultAccess";
 import AdminContentClicks from "./pages/admin/ContentClicks";
+import AdminWatchStats from "./pages/admin/WatchStats";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/admin/membros" element={<AdminMembers />} />
             <Route path="/admin/conteudos" element={<AdminContents />} />
             <Route path="/admin/cliques" element={<AdminContentClicks />} />
+            <Route path="/admin/visualizacoes" element={<AdminWatchStats />} />
             <Route path="/admin/webhooks" element={<AdminWebhooks />} />
             <Route path="/admin/webhooks/gerar" element={<AdminWebhookGenerator />} />
             <Route path="/admin/adult" element={<AdminAdultAccess />} />
