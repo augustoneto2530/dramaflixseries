@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Content } from '@/lib/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,6 +41,8 @@ export default function Watch() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const lastSavedProgressRef = useRef<number>(0);
+  const saveProgressIntervalRef = useRef<NodeJS.Timeout>();
   
   const [content, setContent] = useState<Content | null>(null);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
@@ -54,6 +56,109 @@ export default function Watch() {
   const [showControls, setShowControls] = useState(true);
   const [showEpisodes, setShowEpisodes] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
+
+  // Save watch progress to database
+  const saveWatchProgress = useCallback(async (seconds: number, completed: boolean = false) => {
+    if (!user || !currentEpisode) return;
+    
+    // Only save if progress changed by at least 5 seconds or completed
+    if (!completed && Math.abs(seconds - lastSavedProgressRef.current) < 5) return;
+    
+    try {
+      const { error } = await supabase
+        .from('watch_progress')
+        .upsert({
+          user_id: user.id,
+          episode_id: currentEpisode.id,
+          progress_seconds: Math.floor(seconds),
+          completed,
+          last_watched_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,episode_id'
+        });
+
+      if (error) {
+        console.error('Error saving watch progress:', error);
+      } else {
+        lastSavedProgressRef.current = seconds;
+        console.log('Watch progress saved:', Math.floor(seconds), 'seconds');
+      }
+    } catch (err) {
+      console.error('Error saving progress:', err);
+    }
+  }, [user, currentEpisode]);
+
+  // Load saved progress when episode changes
+  const loadSavedProgress = useCallback(async () => {
+    if (!user || !currentEpisode) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('watch_progress')
+        .select('progress_seconds, completed')
+        .eq('user_id', user.id)
+        .eq('episode_id', currentEpisode.id)
+        .single();
+
+      if (!error && data && !data.completed && data.progress_seconds > 10) {
+        // Resume from saved position (minus 5 seconds for context)
+        const resumeTime = Math.max(0, data.progress_seconds - 5);
+        if (videoRef.current) {
+          videoRef.current.currentTime = resumeTime;
+          toast.info(`Continuando de onde você parou (${formatTime(resumeTime)})`);
+        }
+      }
+    } catch (err) {
+      // No saved progress - that's fine
+    }
+  }, [user, currentEpisode]);
+
+  // Set up interval to save progress every 15 seconds while playing
+  useEffect(() => {
+    if (isPlaying && user && currentEpisode) {
+      saveProgressIntervalRef.current = setInterval(() => {
+        if (videoRef.current) {
+          saveWatchProgress(videoRef.current.currentTime);
+        }
+      }, 15000);
+    }
+
+    return () => {
+      if (saveProgressIntervalRef.current) {
+        clearInterval(saveProgressIntervalRef.current);
+      }
+    };
+  }, [isPlaying, user, currentEpisode, saveWatchProgress]);
+
+  // Save progress when user leaves the page
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (videoRef.current && user && currentEpisode) {
+        // Use sendBeacon for reliable saving on page unload
+        const data = JSON.stringify({
+          user_id: user.id,
+          episode_id: currentEpisode.id,
+          progress_seconds: Math.floor(videoRef.current.currentTime),
+          completed: false,
+          last_watched_at: new Date().toISOString()
+        });
+        navigator.sendBeacon && navigator.sendBeacon(
+          `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/watch_progress?on_conflict=user_id,episode_id`,
+          data
+        );
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [user, currentEpisode]);
+
+  // Load saved progress when episode is loaded
+  useEffect(() => {
+    if (currentEpisode && user) {
+      loadSavedProgress();
+    }
+  }, [currentEpisode, user, loadSavedProgress]);
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -156,6 +261,22 @@ export default function Watch() {
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       setDuration(videoRef.current.duration);
+    }
+  };
+
+  const handleVideoEnded = () => {
+    // Mark as completed when video ends
+    if (videoRef.current) {
+      saveWatchProgress(videoRef.current.duration, true);
+    }
+    goToNextEpisode();
+  };
+
+  const handleVideoPause = () => {
+    setIsPlaying(false);
+    // Save progress when user pauses
+    if (videoRef.current) {
+      saveWatchProgress(videoRef.current.currentTime);
     }
   };
 
@@ -267,8 +388,8 @@ export default function Watch() {
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        onEnded={goToNextEpisode}
+        onPause={handleVideoPause}
+        onEnded={handleVideoEnded}
         onClick={togglePlay}
         autoPlay
       />
