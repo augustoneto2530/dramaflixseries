@@ -73,7 +73,19 @@ export default function Index() {
   }, [user]);
 
   // Memoize filtered contents for performance
-  const { featuredContents, trendingContents, newContents, doramasContents, seriesContents, filmesContents, novelasContents, adultContents } = useMemo(() => {
+  const { heroContents, trendingContents, newContents, doramasContents, seriesContents, filmesContents, novelasContents, adultContents } = useMemo(() => {
+    // Hero Slider: 4 specific titles in exact order from reference image
+    const heroTitles = [
+      'excitar a esposa virgem do mafioso',
+      'sou obsessão mais perigosa dela',
+      'o limite',
+      'ligada a honra'
+    ];
+    
+    const heroSorted = heroTitles
+      .map(title => allContents.find(c => c.title.toLowerCase().includes(title)))
+      .filter(Boolean) as Content[];
+    
     const featured = allContents.filter(c => c.is_featured);
     const adult = allContents.filter(c => c.category === 'adult');
     const nonAdultTrending = allContents.filter(c => c.is_trending && c.category !== 'adult');
@@ -110,7 +122,7 @@ export default function Index() {
     });
 
     return {
-      featuredContents: featured,
+      heroContents: heroSorted.length > 0 ? heroSorted : featured.slice(0, 4),
       trendingContents: sortedTrending,
       newContents: allContents.filter(c => c.is_new),
       doramasContents: allContents.filter(c => c.category === 'doramas'),
@@ -133,8 +145,8 @@ export default function Index() {
 
   return (
     <Layout>
-      {/* Hero Slider */}
-      <HeroSlider contents={featuredContents.length > 0 ? featuredContents : allContents.slice(0, 5)} />
+      {/* Hero Slider - 4 specific series in order */}
+      <HeroSlider contents={heroContents} />
 
       {/* Content Sections - Order matching kdramatv.app */}
       <div className="space-y-0 pb-20 md:pb-12">
