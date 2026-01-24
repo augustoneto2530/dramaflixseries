@@ -91,8 +91,9 @@ export function ContentCarousel({ title, contents, icon, mobileRows = 2 }: Conte
         <div className="md:hidden overflow-x-auto scrollbar-hide -mx-3 px-3">
           <div 
             className={`grid grid-flow-col gap-2.5 ${
-              mobileRows === 1 ? 'grid-rows-1 auto-cols-[140px]' : 
-              mobileRows === 4 ? 'grid-rows-4 auto-cols-[120px]' : 
+              mobileRows === 1 || contents.length <= 2 ? 'grid-rows-1 auto-cols-[140px]' : 
+              mobileRows === 4 && contents.length > 4 ? 'grid-rows-4 auto-cols-[120px]' : 
+              contents.length <= 4 ? 'grid-rows-2 auto-cols-[130px]' :
               'grid-rows-2 auto-cols-[130px]'
             }`}
           >
