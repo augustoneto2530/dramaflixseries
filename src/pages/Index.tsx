@@ -86,7 +86,13 @@ export default function Index() {
     ];
     
     const heroSorted = heroTitles
-      .map(title => allContents.find(c => c.title.toLowerCase().includes(title)))
+      .map(title => {
+        // For "365 dias", match exactly to avoid matching "365 DIAS - PARTE 3"
+        if (title === '365 dias') {
+          return allContents.find(c => c.title.toLowerCase() === '365 dias');
+        }
+        return allContents.find(c => c.title.toLowerCase().includes(title));
+      })
       .filter(Boolean) as Content[];
     
     const featured = allContents.filter(c => c.is_featured);
