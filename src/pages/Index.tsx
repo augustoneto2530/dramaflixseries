@@ -74,14 +74,15 @@ export default function Index() {
 
   // Memoize filtered contents for performance
   const { heroContents, trendingContents, newContents, doramasContents, seriesContents, filmesContents, novelasContents, adultContents } = useMemo(() => {
-    // Hero Slider: 6 specific titles in exact order from reference image
+    // Hero Slider: 7 specific titles in exact order from reference image
     const heroTitles = [
       'excitar a esposa virgem do mafioso',
       'sou obsessão mais perigosa dela',
       'o limite',
       'ligada a honra',
       'contratada para obedecer',
-      'curiosa'
+      'curiosa',
+      '365 dias'
     ];
     
     const heroSorted = heroTitles
