@@ -127,25 +127,25 @@ export function useContentAccess() {
       return null;
     }
 
-    // User only has single content access - show single_content popup
+    // PRIORITY 1: Adult content check - ALWAYS show adult popup for +18 content
+    // regardless of user's plan type (single_content, monthly without adult, etc.)
+    if (content.is_adult) {
+      return 'adult';
+    }
+
+    // PRIORITY 2: User only has single content access - show single_content popup
+    // This only applies for NON-adult content since adult check is done above
     if (hasSingleContentOnly()) {
       return 'single_content';
     }
 
-    // If it's adult content and user doesn't have single_content purchase for it
-    // Monthly users without adult access trying to view adult content
-    if (content.is_adult) {
-      // Check if user has subscription but no adult access
-      if (profile?.subscription_status === 'active' && !profile?.has_adult_access) {
-        return 'adult';
-      }
-      // No subscription at all but content is adult - show adult popup
-      if (!profile?.subscription_status || profile?.subscription_status !== 'active') {
-        return 'adult';
-      }
+    // PRIORITY 3: User has monthly subscription but trying to access blocked content
+    // (This shouldn't happen for non-adult content with active subscription)
+    if (profile?.subscription_status === 'active') {
+      return 'premium';
     }
 
-    // No subscription at all - premium popup
+    // PRIORITY 4: No subscription at all - premium popup
     return 'premium';
   }, [profile, checkContentAccess, hasSingleContentOnly]);
 
