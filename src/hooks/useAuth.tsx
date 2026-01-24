@@ -72,36 +72,73 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    let isMounted = true;
 
-        if (session?.user) {
-          setTimeout(() => {
-            fetchProfile(session.user.id).then(setProfile);
-            checkAdminRole(session.user.id).then(setIsAdmin);
+    // IMPORTANT: Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        if (!isMounted) return;
+        
+        console.log('Auth state changed:', event, currentSession?.user?.email);
+        
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        if (currentSession?.user) {
+          // Use setTimeout to avoid race conditions with Supabase internals
+          setTimeout(async () => {
+            if (!isMounted) return;
+            const profileData = await fetchProfile(currentSession.user.id);
+            if (isMounted) setProfile(profileData);
+            const adminStatus = await checkAdminRole(currentSession.user.id);
+            if (isMounted) setIsAdmin(adminStatus);
           }, 0);
         } else {
           setProfile(null);
           setIsAdmin(false);
         }
-        setIsLoading(false);
+        
+        if (isMounted) setIsLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // THEN check for existing session
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: existingSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          if (isMounted) setIsLoading(false);
+          return;
+        }
 
-      if (session?.user) {
-        fetchProfile(session.user.id).then(setProfile);
-        checkAdminRole(session.user.id).then(setIsAdmin);
+        if (!isMounted) return;
+
+        if (existingSession?.user) {
+          console.log('Existing session found for:', existingSession.user.email);
+          setSession(existingSession);
+          setUser(existingSession.user);
+          
+          const profileData = await fetchProfile(existingSession.user.id);
+          if (isMounted) setProfile(profileData);
+          const adminStatus = await checkAdminRole(existingSession.user.id);
+          if (isMounted) setIsAdmin(adminStatus);
+        }
+        
+        if (isMounted) setIsLoading(false);
+      } catch (err) {
+        console.error('Error initializing auth:', err);
+        if (isMounted) setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
