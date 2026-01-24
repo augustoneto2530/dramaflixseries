@@ -78,7 +78,25 @@ export default function Index() {
     const adult = allContents.filter(c => c.category === 'adult');
     const nonAdultTrending = allContents.filter(c => c.is_trending && c.category !== 'adult');
     
-    const priorityTitles = ['a esposa virgem do mafioso', 'ligada a honra'];
+    const priorityTitles = [
+      'excitar a esposa virgem do mafioso',
+      'ligada a honra',
+      'obsessão mais perigosa',
+      'contratada para obedecer',
+      'o limite',
+      'curiosa',
+      'doce tentação',
+      '365 dias',
+      'procura-se namorada',
+      'o preço do prazer',
+      'jogos psicológicos',
+      'um amor arriscado',
+      'o lado bom de ser traída',
+      'amor sem limites',
+      'tentação perigosa',
+      'banho gelado',
+      'serviço de quarto'
+    ];
     const sortedTrending = [...adult, ...nonAdultTrending].sort((a, b) => {
       const aTitle = a.title.toLowerCase();
       const bTitle = b.title.toLowerCase();
