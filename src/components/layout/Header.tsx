@@ -46,7 +46,7 @@ export function Header() {
             <img 
               src={dramaflixLogo} 
               alt="DramaFlix" 
-              className="h-16 md:h-20 w-auto object-contain"
+              className="h-20 md:h-20 w-auto object-contain"
             />
           </Link>
 
