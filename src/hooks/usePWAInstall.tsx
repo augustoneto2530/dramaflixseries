@@ -80,11 +80,14 @@ export function usePWAInstall(): PWAInstallState {
           setDeferredPrompt(null);
           return true;
         }
+        return false;
       } catch (error) {
         console.error('Error showing install prompt:', error);
+        return false;
       }
     }
 
+    // No prompt available - return false to trigger manual instructions
     return false;
   }, [deferredPrompt, isIOS, isStandalone]);
 
@@ -92,8 +95,11 @@ export function usePWAInstall(): PWAInstallState {
     setShowIOSInstructions(false);
   }, []);
 
+  // Always show install button (except when already installed)
+  // On production with HTTPS, the native prompt will work
+  // Otherwise, we show manual instructions
   return {
-    isInstallable: !!deferredPrompt || (isIOS && !isStandalone),
+    isInstallable: !isInstalled && !isStandalone, // Always installable if not already installed
     isInstalled: isInstalled || isStandalone,
     isIOS,
     isAndroid,

@@ -20,8 +20,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "icons/*.svg", "images/*"],
       manifest: {
-        name: "DramaTV",
-        short_name: "DramaTV",
+        name: "Dramflix",
+        short_name: "Dramflix",
         description: "Sua plataforma de streaming com os melhores doramas, novelas, filmes e séries",
         theme_color: "#e50914",
         background_color: "#0b0b0b",
