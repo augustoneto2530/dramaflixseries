@@ -44,17 +44,26 @@ export function usePWAInstall(): PWAInstallState {
     }
 
     const handleBeforeInstall = (e: BeforeInstallPromptEvent) => {
+      console.log('PWA: beforeinstallprompt event captured!');
       e.preventDefault();
       setDeferredPrompt(e);
     };
 
     const handleAppInstalled = () => {
+      console.log('PWA: App was installed!');
       setIsInstalled(true);
       setDeferredPrompt(null);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
     window.addEventListener('appinstalled', handleAppInstalled);
+
+    // Check if we're in a context where PWA install is possible
+    console.log('PWA: Listening for install prompt...', {
+      isSecure: window.location.protocol === 'https:',
+      isStandalone,
+      userAgent: navigator.userAgent.substring(0, 50)
+    });
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
