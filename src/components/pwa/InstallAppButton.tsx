@@ -8,16 +8,25 @@ export function InstallAppButton() {
     isInstalled,
     isIOS,
     isAndroid,
+    canPromptInstall,
     promptInstall,
   } = usePWAInstall();
 
-  // Don't show if already installed
-  if (isInstalled) {
+  // One-click install is not possible on iOS Safari; hide the button to avoid instructions.
+  if (isInstalled || isIOS) {
     return null;
   }
 
   const handleClick = async () => {
     console.log('PWA: Install button clicked');
+
+    if (!canPromptInstall) {
+      toast.info('Instalação disponível apenas no site publicado (HTTPS) e em navegadores compatíveis.', {
+        duration: 5000,
+      });
+      return;
+    }
+
     const installed = await promptInstall();
     console.log('PWA: Install result:', installed);
     

@@ -18,6 +18,7 @@ interface PWAInstallState {
   isAndroid: boolean;
   isStandalone: boolean;
   showIOSInstructions: boolean;
+  canPromptInstall: boolean;
   promptInstall: () => Promise<boolean>;
   dismissIOSInstructions: () => void;
 }
@@ -104,16 +105,22 @@ export function usePWAInstall(): PWAInstallState {
     setShowIOSInstructions(false);
   }, []);
 
+  // Android/Chromium only: true when we have the real native prompt event captured.
+  const canPromptInstall = !!deferredPrompt;
+
   // Always show install button (except when already installed)
   // On production with HTTPS, the native prompt will work
   // Otherwise, we show manual instructions
   return {
-    isInstallable: !isInstalled && !isStandalone, // Always installable if not already installed
+    // To behave like kdramatv: only show install UI when the native prompt is available.
+    // (iOS doesn't support one-click install, so we don't mark it installable.)
+    isInstallable: !isInstalled && !isStandalone && canPromptInstall,
     isInstalled: isInstalled || isStandalone,
     isIOS,
     isAndroid,
     isStandalone,
     showIOSInstructions,
+    canPromptInstall,
     promptInstall,
     dismissIOSInstructions,
   };
