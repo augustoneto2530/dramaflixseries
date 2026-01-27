@@ -60,7 +60,7 @@ export function InstallBanner() {
           {/* Content */}
           <div className="flex-1 min-w-0 pr-6">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-bold text-foreground">Instale o DramaTV</h3>
+              <h3 className="font-bold text-foreground">Instale o Dramflix</h3>
               <Sparkles className="h-4 w-4 text-primary animate-pulse" />
             </div>
             <p className="text-sm text-muted-foreground line-clamp-2">
