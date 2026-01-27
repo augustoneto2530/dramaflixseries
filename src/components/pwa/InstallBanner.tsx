@@ -5,15 +5,16 @@ import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { InstallAppButton } from './InstallAppButton';
 
 export function InstallBanner() {
-  const { isInstallable, isInstalled, isStandalone } = usePWAInstall();
-  const [isDismissed, setIsDismissed] = useState(false);
+  const { isInstalled, isStandalone } = usePWAInstall();
+  const [isDismissed, setIsDismissed] = useState(() => {
+    // Check immediately on mount if banner was dismissed
+    return localStorage.getItem('pwa-banner-dismissed') === 'true';
+  });
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Check if banner was previously dismissed
-    const dismissed = localStorage.getItem('pwa-banner-dismissed');
-    if (dismissed) {
-      setIsDismissed(true);
+    // Don't show if already dismissed or installed
+    if (isDismissed || isInstalled || isStandalone) {
       return;
     }
 
@@ -23,15 +24,18 @@ export function InstallBanner() {
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [isDismissed, isInstalled, isStandalone]);
 
-  const handleDismiss = () => {
+  const handleDismiss = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setIsDismissed(true);
+    setIsVisible(false);
     localStorage.setItem('pwa-banner-dismissed', 'true');
   };
 
-  // Don't show if already installed, not installable, dismissed, or running as standalone
-  if (isInstalled || !isInstallable || isDismissed || isStandalone || !isVisible) {
+  // Don't show if already installed, dismissed, or running as standalone
+  if (isInstalled || isDismissed || isStandalone || !isVisible) {
     return null;
   }
 
