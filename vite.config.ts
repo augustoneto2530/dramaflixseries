@@ -30,26 +30,20 @@ export default defineConfig(({ mode }) => ({
         scope: "/",
         start_url: "/",
         categories: ["entertainment", "video"],
-        icons: [
-          {
-            src: "/icons/icon-192x192.svg",
-            sizes: "192x192",
-            type: "image/svg+xml",
-            purpose: "any maskable"
-          },
-          {
-            src: "/icons/icon-512x512.svg",
-            sizes: "512x512",
-            type: "image/svg+xml",
-            purpose: "any maskable"
-          },
-          {
-            src: "/icons/apple-touch-icon.svg",
-            sizes: "180x180",
-            type: "image/svg+xml",
-            purpose: "apple touch icon"
-          }
-        ]
+      icons: [
+        {
+          src: "/icons/icon-192x192.png",
+          sizes: "192x192",
+          type: "image/png",
+          purpose: "any maskable"
+        },
+        {
+          src: "/icons/icon-512x512.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "any maskable"
+        }
+      ]
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,jpg,jpeg}"],
