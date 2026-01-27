@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "icons/*.svg", "images/*"],
+      includeAssets: ["favicon.ico", "icons/*.png", "icons/*.svg", "images/*"],
       manifest: {
         name: "Dramaflix",
         short_name: "Dramaflix",
@@ -35,13 +35,25 @@ export default defineConfig(({ mode }) => ({
           src: "/icons/icon-192x192.png",
           sizes: "192x192",
           type: "image/png",
-          purpose: "any maskable"
+          purpose: "any"
         },
         {
           src: "/icons/icon-512x512.png",
           sizes: "512x512",
           type: "image/png",
-          purpose: "any maskable"
+          purpose: "any"
+        },
+        {
+          src: "/icons/icon-192x192.png",
+          sizes: "192x192",
+          type: "image/png",
+          purpose: "maskable"
+        },
+        {
+          src: "/icons/icon-512x512.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "maskable"
         }
       ]
       },
