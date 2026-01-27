@@ -63,7 +63,7 @@ export function InstallAppButton() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <Smartphone className="h-6 w-6 text-primary" />
-              Instalar Dramflix
+              Instalar Dramaflix
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
               Adicione o app à sua tela inicial para uma experiência completa de streaming
@@ -124,7 +124,7 @@ export function InstallAppButton() {
                 <span className="text-2xl font-bold text-white">D</span>
               </div>
               <div>
-                <p className="font-semibold text-foreground">Dramflix</p>
+                <p className="font-semibold text-foreground">Dramaflix</p>
                 <p className="text-xs text-muted-foreground">Seu app de streaming favorito</p>
               </div>
             </div>
@@ -149,7 +149,7 @@ export function InstallAppButton() {
               ) : (
                 <Monitor className="h-6 w-6 text-primary" />
               )}
-              Instalar Dramflix
+              Instalar Dramaflix
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
               {isAndroid 
@@ -210,7 +210,7 @@ export function InstallAppButton() {
                       Clique no ícone <span className="px-2 py-0.5 bg-muted rounded-md">⊕</span> na barra de endereço
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Ou vá em Menu → "Instalar Dramflix..."
+                      Ou vá em Menu → "Instalar Dramaflix..."
                     </p>
                   </div>
                 </div>
@@ -239,7 +239,7 @@ export function InstallAppButton() {
                 <span className="text-2xl font-bold text-white">D</span>
               </div>
               <div>
-                <p className="font-semibold text-foreground">Dramflix</p>
+                <p className="font-semibold text-foreground">Dramaflix</p>
                 <p className="text-xs text-muted-foreground">Seu app de streaming favorito</p>
               </div>
             </div>
