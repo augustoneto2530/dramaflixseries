@@ -12,41 +12,28 @@ export function InstallAppButton() {
     promptInstall,
   } = usePWAInstall();
 
-  // One-click install is not possible on iOS Safari; hide the button to avoid instructions.
-  if (isInstalled || isIOS) {
+  // Hide only when already installed
+  if (isInstalled) {
     return null;
   }
 
   const handleClick = async () => {
     console.log('PWA: Install button clicked');
 
-    if (!canPromptInstall) {
-      toast.info('Instalação disponível apenas no site publicado (HTTPS) e em navegadores compatíveis.', {
-        duration: 5000,
-      });
-      return;
+    // If native prompt available → 1-click install
+    if (canPromptInstall) {
+      const installed = await promptInstall();
+      console.log('PWA: Install result:', installed);
+      if (installed) return; // Success, nothing else needed
     }
 
-    const installed = await promptInstall();
-    console.log('PWA: Install result:', installed);
-    
-    if (!installed) {
-      if (isIOS) {
-        // iOS doesn't support automatic install
-        toast.info('Toque em Compartilhar ⬆️ e depois "Adicionar à Tela de Início"', {
-          duration: 5000,
-        });
-      } else if (isAndroid) {
-        // Android but no prompt available - might be in preview
-        toast.info('Abra o menu do navegador (⋮) e toque em "Instalar app" ou "Adicionar à tela inicial"', {
-          duration: 5000,
-        });
-      } else {
-        // Desktop
-        toast.info('Clique no ícone ⊕ na barra de endereço para instalar', {
-          duration: 5000,
-        });
-      }
+    // Fallback: short toast with instructions
+    if (isIOS) {
+      toast.info('Toque em ⬆️ Compartilhar → "Adicionar à Tela de Início"', { duration: 4000 });
+    } else if (isAndroid) {
+      toast.info('Menu ⋮ → "Instalar app"', { duration: 4000 });
+    } else {
+      toast.info('Clique em ⊕ na barra de endereço', { duration: 4000 });
     }
   };
 
