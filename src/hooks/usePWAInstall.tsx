@@ -112,9 +112,8 @@ export function usePWAInstall(): PWAInstallState {
   // On production with HTTPS, the native prompt will work
   // Otherwise, we show manual instructions
   return {
-    // To behave like kdramatv: only show install UI when the native prompt is available.
-    // (iOS doesn't support one-click install, so we don't mark it installable.)
-    isInstallable: !isInstalled && !isStandalone && canPromptInstall,
+    // Button always visible (except when installed). Native 1-click when available.
+    isInstallable: !isInstalled && !isStandalone,
     isInstalled: isInstalled || isStandalone,
     isIOS,
     isAndroid,
