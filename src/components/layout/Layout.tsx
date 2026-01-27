@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { MobileNavbar } from './MobileNavbar';
+import { InstallBanner } from '@/components/pwa/InstallBanner';
 
 interface LayoutProps {
   children: ReactNode;
@@ -15,6 +16,7 @@ export function Layout({ children, showFooter = true }: LayoutProps) {
       <main className="flex-1 pb-16 md:pb-0">{children}</main>
       {showFooter && <Footer />}
       <MobileNavbar />
+      <InstallBanner />
     </div>
   );
 }
