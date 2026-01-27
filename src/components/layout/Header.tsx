@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
+import { InstallAppButton } from '@/components/pwa/InstallAppButton';
 import dramaflixLogo from '@/assets/dramaflix-logo.png';
 
 const categories = [
@@ -75,6 +76,11 @@ export function Header() {
             >
               <Search className="h-5 w-5" />
             </Button>
+
+            {/* Install App Button - Desktop */}
+            <div className="hidden md:block">
+              <InstallAppButton />
+            </div>
 
             {/* Support Link - Desktop */}
             <Link to="/suporte" className="hidden md:flex">
