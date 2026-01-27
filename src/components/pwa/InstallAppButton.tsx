@@ -7,6 +7,7 @@ export function InstallAppButton() {
   const {
     isInstalled,
     isIOS,
+    isAndroid,
     promptInstall,
   } = usePWAInstall();
 
@@ -16,12 +17,24 @@ export function InstallAppButton() {
   }
 
   const handleClick = async () => {
+    console.log('PWA: Install button clicked');
     const installed = await promptInstall();
+    console.log('PWA: Install result:', installed);
     
     if (!installed) {
-      // Only show brief instruction for iOS (Apple doesn't allow direct install)
       if (isIOS) {
+        // iOS doesn't support automatic install
         toast.info('Toque em Compartilhar ⬆️ e depois "Adicionar à Tela de Início"', {
+          duration: 5000,
+        });
+      } else if (isAndroid) {
+        // Android but no prompt available - might be in preview
+        toast.info('Abra o menu do navegador (⋮) e toque em "Instalar app" ou "Adicionar à tela inicial"', {
+          duration: 5000,
+        });
+      } else {
+        // Desktop
+        toast.info('Clique no ícone ⊕ na barra de endereço para instalar', {
           duration: 5000,
         });
       }
