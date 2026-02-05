@@ -21,7 +21,7 @@ const annualFeatures = [
 
 export default function Plans() {
   const handleMonthlyClick = () => {
-    window.open('https://pay.lowify.com.br/checkout?product_id=oZlEUd', '_blank');
+    window.open('https://pay.lowify.com.br/checkout?product_id=FKW32r', '_blank');
   };
 
   const handleAnnualClick = () => {
