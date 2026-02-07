@@ -424,7 +424,7 @@ export default function Auth() {
             <img
               src={dramaflixLogo}
               alt="Dramaflix"
-              className="w-24 h-24 rounded-2xl object-contain drop-shadow-[0_0_30px_rgba(220,38,38,0.35)]"
+              className="w-32 h-32 md:w-36 md:h-36 rounded-2xl object-contain drop-shadow-[0_0_30px_rgba(220,38,38,0.35)]"
             />
           </Link>
         </div>
@@ -433,7 +433,7 @@ export default function Auth() {
         <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-2 bg-gradient-to-r from-primary to-red-400 bg-clip-text text-transparent">
           Entretenimento Sem Limites
         </h1>
-        <p className="text-muted-foreground text-center mb-8">
+        <p className="text-xs md:text-base text-muted-foreground text-center mb-8">
           Milhares de conteúdos esperando por você
         </p>
 
