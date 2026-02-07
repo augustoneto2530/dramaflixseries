@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, CheckCircle, ArrowRight, Loader2, User, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, CheckCircle, ArrowRight, Loader2, User, Sparkles, ArrowLeft } from 'lucide-react';
+import dramaflixLogo from '@/assets/dramaflix-logo.png';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -412,45 +413,67 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 relative overflow-hidden">
+      {/* Subtle red glow behind logo area */}
+      <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-72 h-72 bg-red-600/15 rounded-full blur-[100px] pointer-events-none" />
+
+      <div className="w-full max-w-md relative z-10">
         {/* Logo */}
-        <Link to="/" className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-12 h-12 rounded-lg brand-gradient flex items-center justify-center">
-            <span className="text-2xl font-bold text-white">D</span>
-          </div>
-          <span className="text-2xl font-bold brand-gradient-text">Drama_Flix</span>
-        </Link>
+        <div className="flex justify-center mb-6">
+          <Link to="/">
+            <img
+              src={dramaflixLogo}
+              alt="Dramaflix"
+              className="w-24 h-24 rounded-2xl object-contain drop-shadow-[0_0_30px_rgba(220,38,38,0.35)]"
+            />
+          </Link>
+        </div>
 
-        {/* Form Card */}
-        <div className="bg-card border border-border rounded-xl p-8">
-          {/* Step 1: Email Validation */}
-          {step === 'email' && (
-            <>
-              <h1 className="text-2xl font-bold text-center mb-2">Acessar Conta</h1>
-              <p className="text-muted-foreground text-center mb-6">
-                Digite seu email para verificar seu acesso
-              </p>
+        {/* Title */}
+        <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-2 bg-gradient-to-r from-primary to-red-400 bg-clip-text text-transparent">
+          Entretenimento Sem Limites
+        </h1>
+        <p className="text-muted-foreground text-center mb-8">
+          Milhares de conteúdos esperando por você
+        </p>
 
+        {/* Step 1: Email Validation */}
+        {step === 'email' && (
+          <>
+            {/* Welcome badge */}
+            <div className="flex justify-center mb-4">
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-muted/60 border border-border text-sm text-muted-foreground">
+                <Sparkles className="h-4 w-4 text-primary" />
+                Bem-vindo!
+              </span>
+            </div>
+
+            <h2 className="text-xl font-bold text-center mb-1">Acesse sua conta</h2>
+            <p className="text-muted-foreground text-center text-sm mb-6">
+              Digite seu email para continuar
+            </p>
+
+            {/* Form Card */}
+            <div className="bg-card/60 backdrop-blur border border-border rounded-2xl p-6 mb-6">
               <form onSubmit={handleEmailSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      className="pl-10"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
+                  <Label htmlFor="email" className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4" />
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="h-12 rounded-xl border-primary/30 focus:border-primary"
+                  />
                 </div>
 
-                <Button type="submit" className="w-full brand-gradient" disabled={isLoading}>
+                <Button type="submit" className="w-full h-12 rounded-xl brand-gradient text-base font-semibold" disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -459,140 +482,227 @@ export default function Auth() {
                   ) : (
                     <>
                       Continuar
-                      <ArrowRight className="ml-2 h-4 w-4" />
+                      <ArrowRight className="ml-2 h-5 w-5" />
                     </>
                   )}
                 </Button>
               </form>
+            </div>
 
-              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground text-center mb-2">
-                  <strong>Apenas compradores podem acessar.</strong>
-                </p>
-                <p className="text-xs text-muted-foreground text-center">
-                  Ainda não tem acesso?{' '}
-                  <Link to="/planos" className="text-primary hover:underline font-medium">
-                    Adquira seu plano aqui
-                  </Link>
-                </p>
+            {/* Info box - buyers only */}
+            <div className="mb-4 p-4 bg-muted/40 rounded-xl border border-border">
+              <p className="text-sm text-muted-foreground text-center mb-1">
+                <strong>Apenas compradores podem acessar.</strong>
+              </p>
+              <p className="text-xs text-muted-foreground text-center">
+                Ainda não tem acesso?{' '}
+                <Link to="/planos" className="text-primary hover:underline font-medium">
+                  Adquira seu plano aqui
+                </Link>
+              </p>
+            </div>
+
+            {/* Forgot password */}
+            <div className="text-center mb-4">
+              <button
+                type="button"
+                onClick={() => {
+                  if (email.trim()) {
+                    setEmail(email.trim().toLowerCase());
+                    setStep('reset-password');
+                  } else {
+                    toast({
+                      title: 'Email necessário',
+                      description: 'Digite seu email primeiro para recuperar a senha.',
+                      variant: 'destructive',
+                    });
+                  }
+                }}
+                className="text-sm text-primary hover:underline"
+              >
+                Esqueci minha senha
+              </button>
+            </div>
+
+            {/* Back to home */}
+            <div className="text-center">
+              <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <ArrowLeft className="h-4 w-4" />
+                Voltar para o início
+              </Link>
+            </div>
+          </>
+        )}
+
+        {/* Step 2: Create Password (First Access) */}
+        {step === 'create-password' && (
+          <div className="bg-card/60 backdrop-blur border border-border rounded-2xl p-6">
+            {/* Header com ícone de sucesso */}
+            <div className="flex items-center gap-3 mb-6 p-4 bg-gradient-to-r from-amber-500/20 to-yellow-500/10 rounded-lg border border-amber-500/30">
+              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <CheckCircle className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <h2 className="font-semibold text-foreground">Compra identificada!</h2>
+                <p className="text-sm text-muted-foreground">Escolha sua senha abaixo</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleCreatePassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName" className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Nome completo
+                </Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="Seu nome"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  className="h-12 rounded-xl"
+                />
               </div>
 
-              <div className="mt-4 text-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (email.trim()) {
-                      setEmail(email.trim().toLowerCase());
-                      setStep('reset-password');
-                    } else {
-                      toast({
-                        title: 'Email necessário',
-                        description: 'Digite seu email primeiro para recuperar a senha.',
-                        variant: 'destructive',
-                      });
-                    }
-                  }}
-                  className="text-sm text-primary hover:underline"
-                >
-                  Esqueci minha senha
-                </button>
-              </div>
-            </>
-          )}
-
-          {/* Step 2: Create Password (First Access) - Modal Style */}
-          {step === 'create-password' && (
-            <>
-              {/* Header com ícone de sucesso */}
-              <div className="flex items-center gap-3 mb-6 p-4 bg-gradient-to-r from-amber-500/20 to-yellow-500/10 rounded-lg border border-amber-500/30">
-                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="h-5 w-5 text-amber-500" />
-                </div>
-                <div>
-                  <h2 className="font-semibold text-foreground">Compra identificada!</h2>
-                  <p className="text-sm text-muted-foreground">Escolha sua senha abaixo</p>
-                </div>
-              </div>
-
-              <form onSubmit={handleCreatePassword} className="space-y-4">
-                {/* Campo Nome */}
-                <div className="space-y-2">
-                  <Label htmlFor="fullName" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Nome completo
-                  </Label>
+              <div className="space-y-2">
+                <Label htmlFor="email-display" className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Email
+                </Label>
+                <div className="relative">
                   <Input
-                    id="fullName"
-                    type="text"
-                    placeholder="Seu nome"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    id="email-display"
+                    type="email"
+                    value={email}
+                    disabled
+                    className="bg-muted pr-10 h-12 rounded-xl"
+                  />
+                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password" className="flex items-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  Senha
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    className="pr-10 h-12 rounded-xl"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">Mínimo 6 caracteres</p>
+              </div>
+
+              <Button type="submit" className="w-full h-12 rounded-xl brand-gradient text-base font-semibold mt-2" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Criando conta...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Criar conta
+                  </>
+                )}
+              </Button>
+
+              <Button 
+                type="button" 
+                variant="ghost" 
+                className="w-full" 
+                onClick={handleBack}
+                disabled={isLoading}
+              >
+                Voltar
+              </Button>
+            </form>
+          </div>
+        )}
+
+        {/* Step 3: Login (Returning User) */}
+        {step === 'login' && (
+          <div className="bg-card/60 backdrop-blur border border-border rounded-2xl p-6">
+            <h2 className="text-xl font-bold text-center mb-1">Bem-vindo de volta!</h2>
+            <p className="text-muted-foreground text-center text-sm mb-6">
+              Digite sua senha para continuar
+            </p>
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email-login">Email</Label>
+                <Input
+                  id="email-login"
+                  type="email"
+                  value={email}
+                  disabled
+                  className="bg-muted h-12 rounded-xl"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password-login">Senha</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password-login"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    className="pl-10 pr-10 h-12 rounded-xl"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
+              </div>
 
-                {/* Campo Email (readonly) */}
-                <div className="space-y-2">
-                  <Label htmlFor="email-display" className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
-                    Email
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="email-display"
-                      type="email"
-                      value={email}
-                      disabled
-                      className="bg-muted pr-10"
-                    />
-                    <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
-                  </div>
-                </div>
+              <Button type="submit" className="w-full h-12 rounded-xl brand-gradient text-base font-semibold" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Entrando...
+                  </>
+                ) : (
+                  'Entrar'
+                )}
+              </Button>
 
-                {/* Campo Senha */}
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="flex items-center gap-2">
-                    <Lock className="h-4 w-4" />
-                    Senha
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      className="pr-10"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      disabled={isLoading}
-                      minLength={6}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Mínimo 6 caracteres</p>
-                </div>
-
-                <Button type="submit" className="w-full brand-gradient mt-6" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Criando conta...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Criar conta
-                    </>
-                  )}
+              <div className="flex flex-col gap-2">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  className="w-full text-primary" 
+                  onClick={() => setStep('reset-password')}
+                  disabled={isLoading}
+                >
+                  Esqueci minha senha
                 </Button>
-
                 <Button 
                   type="button" 
                   variant="ghost" 
@@ -600,219 +710,140 @@ export default function Auth() {
                   onClick={handleBack}
                   disabled={isLoading}
                 >
-                  Voltar
+                  Usar outro email
                 </Button>
-              </form>
-            </>
-          )}
+              </div>
+            </form>
+          </div>
+        )}
 
-          {/* Step 3: Login (Returning User) */}
-          {step === 'login' && (
-            <>
-              <h1 className="text-2xl font-bold text-center mb-2">Bem-vindo de volta!</h1>
-              <p className="text-muted-foreground text-center mb-6">
-                Digite sua senha para continuar
-              </p>
+        {/* Step 4: Reset Password */}
+        {step === 'reset-password' && (
+          <div className="bg-card/60 backdrop-blur border border-border rounded-2xl p-6">
+            <h2 className="text-xl font-bold text-center mb-1">Recuperar Senha</h2>
+            <p className="text-muted-foreground text-center text-sm mb-6">
+              Enviaremos um link para redefinir sua senha
+            </p>
 
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email-login">Email</Label>
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email-reset">Email</Label>
+                <Input
+                  id="email-reset"
+                  type="email"
+                  value={email}
+                  disabled
+                  className="bg-muted h-12 rounded-xl"
+                />
+              </div>
+
+              <Button type="submit" className="w-full h-12 rounded-xl brand-gradient text-base font-semibold" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  'Enviar Link de Recuperação'
+                )}
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() => setStep('login')}
+                disabled={isLoading}
+              >
+                Voltar ao login
+              </Button>
+            </form>
+          </div>
+        )}
+
+        {/* Step 5: Update Password (from recovery link) */}
+        {step === 'update-password' && (
+          <div className="bg-card/60 backdrop-blur border border-border rounded-2xl p-6">
+            <h2 className="text-xl font-bold text-center mb-1">Criar nova senha</h2>
+            <p className="text-muted-foreground text-center text-sm mb-6">
+              Defina sua nova senha para entrar imediatamente
+            </p>
+
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email-recovery">Email</Label>
+                <Input id="email-recovery" type="email" value={email || 'Carregando...'} disabled className="bg-muted h-12 rounded-xl" />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="new-password">Nova senha</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="email-login"
-                    type="email"
-                    value={email}
-                    disabled
-                    className="bg-muted"
+                    id="new-password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    className="pl-10 pr-10 h-12 rounded-xl"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirm-new-password">Confirmar nova senha</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="confirm-new-password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    className="pl-10 h-12 rounded-xl"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    disabled={isLoading}
                   />
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="password-login">Senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="password-login"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      className="pl-10 pr-10"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      disabled={isLoading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
+              <Button type="submit" className="w-full h-12 rounded-xl brand-gradient text-base font-semibold" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  'Salvar nova senha'
+                )}
+              </Button>
 
-                <Button type="submit" className="w-full brand-gradient" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Entrando...
-                    </>
-                  ) : (
-                    'Entrar'
-                  )}
-                </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() => {
+                  window.history.replaceState({}, document.title, '/auth');
+                  setStep('login');
+                }}
+                disabled={isLoading}
+              >
+                Voltar ao login
+              </Button>
+            </form>
+          </div>
+        )}
 
-                <div className="flex flex-col gap-2">
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    className="w-full text-primary" 
-                    onClick={() => setStep('reset-password')}
-                    disabled={isLoading}
-                  >
-                    Esqueci minha senha
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    className="w-full" 
-                    onClick={handleBack}
-                    disabled={isLoading}
-                  >
-                    Usar outro email
-                  </Button>
-                </div>
-              </form>
-            </>
-          )}
-
-          {/* Step 4: Reset Password */}
-          {step === 'reset-password' && (
-            <>
-              <h1 className="text-2xl font-bold text-center mb-2">Recuperar Senha</h1>
-              <p className="text-muted-foreground text-center mb-6">
-                Enviaremos um link para redefinir sua senha
-              </p>
-
-              <form onSubmit={handleResetPassword} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email-reset">Email</Label>
-                  <Input
-                    id="email-reset"
-                    type="email"
-                    value={email}
-                    disabled
-                    className="bg-muted"
-                  />
-                </div>
-
-                <Button type="submit" className="w-full brand-gradient" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Enviando...
-                    </>
-                  ) : (
-                    'Enviar Link de Recuperação'
-                  )}
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full"
-                  onClick={() => setStep('login')}
-                  disabled={isLoading}
-                >
-                  Voltar ao login
-                </Button>
-              </form>
-            </>
-          )}
-
-          {/* Step 5: Update Password (from recovery link) */}
-          {step === 'update-password' && (
-            <>
-              <h1 className="text-2xl font-bold text-center mb-2">Criar nova senha</h1>
-              <p className="text-muted-foreground text-center mb-6">
-                Defina sua nova senha para entrar imediatamente
-              </p>
-
-              <form onSubmit={handleUpdatePassword} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email-recovery">Email</Label>
-                  <Input id="email-recovery" type="email" value={email || 'Carregando...'} disabled className="bg-muted" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="new-password">Nova senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="new-password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      className="pl-10 pr-10"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      disabled={isLoading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-new-password">Confirmar nova senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="confirm-new-password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      className="pl-10"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
-
-                <Button type="submit" className="w-full brand-gradient" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Salvando...
-                    </>
-                  ) : (
-                    'Salvar nova senha'
-                  )}
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full"
-                  onClick={() => {
-                    window.history.replaceState({}, document.title, '/auth');
-                    setStep('login');
-                  }}
-                  disabled={isLoading}
-                >
-                  Voltar ao login
-                </Button>
-              </form>
-            </>
-          )}
-        </div>
-
-        <p className="text-center text-xs text-muted-foreground mt-4">
+        <p className="text-center text-xs text-muted-foreground mt-6">
           Ao acessar, você concorda com nossos{' '}
           <Link to="/termos" className="hover:underline">
             Termos de Uso
