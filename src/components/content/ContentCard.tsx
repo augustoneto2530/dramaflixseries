@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 interface ContentCardProps {
   content: Content;
   variant?: 'default' | 'large';
+  forceNew?: boolean;
 }
 
 const categoryStyles: Record<ContentCategory, string> = {
@@ -22,7 +23,7 @@ const categoryStyles: Record<ContentCategory, string> = {
   series: 'category-series',
 };
 
-export function ContentCard({ content, variant = 'default' }: ContentCardProps) {
+export function ContentCard({ content, variant = 'default', forceNew = false }: ContentCardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { checkContentAccess, getBlockedReason, getPurchasedContentTitle } = useContentAccess();
@@ -88,7 +89,7 @@ export function ContentCard({ content, variant = 'default' }: ContentCardProps) 
 
         {/* Category/Tags Badge - Top Left - Matching kdramatv.app style */}
         <div className="absolute top-1.5 left-1.5 md:top-2 md:left-2 flex flex-col gap-1 z-10">
-          {content.is_new && (
+          {(content.is_new || forceNew) && (
             <span className="inline-block bg-red-500 text-white text-[8px] md:text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">
               Lançamento
             </span>
