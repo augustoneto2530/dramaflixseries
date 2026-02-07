@@ -40,16 +40,36 @@ export function ContentCarousel({ title, contents, icon, mobileRows = 2, forceNe
           <div className="flex items-center gap-2 md:gap-3">
             {Icon && (
               <div className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center shadow-lg ${
-                icon === 'flame' 
-                  ? 'bg-gradient-to-br from-orange-500 to-orange-600' 
-                  : 'brand-gradient'
+                title === '+18'
+                  ? 'bg-orange-950/60 border border-orange-800/40'
+                  : icon === 'flame' 
+                    ? 'bg-gradient-to-br from-orange-500 to-orange-600' 
+                    : 'brand-gradient'
               }`}>
                 <Icon className={`h-5 w-5 md:h-6 md:w-6 ${
-                  icon === 'flame' ? 'text-white' : 'text-white'
+                  title === '+18' ? 'text-orange-400' : 'text-white'
                 }`} />
               </div>
             )}
-            <h2 className="text-lg md:text-2xl font-bold text-white">{title}</h2>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className={`text-lg md:text-2xl font-bold ${
+                  title === '+18'
+                    ? 'bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent'
+                    : 'text-white'
+                }`}>
+                  {title === '+18' ? 'Conteúdo +18' : title}
+                </h2>
+                {title === '+18' && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-orange-700/80 text-orange-100 text-xs font-bold uppercase tracking-wide">
+                    HOT
+                  </span>
+                )}
+              </div>
+              {title === '+18' && (
+                <p className="text-sm text-muted-foreground mt-0.5">Conteúdo exclusivo para maiores de 18 anos</p>
+              )}
+            </div>
           </div>
 
           {/* Navigation Buttons - Desktop only - Matching kdramatv.app style */}
