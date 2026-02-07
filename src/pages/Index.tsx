@@ -215,6 +215,7 @@ export default function Index() {
           title="+18"
           contents={adultContents}
           mobileRows={4}
+          icon="flame"
         />
       </div>
     </Layout>
