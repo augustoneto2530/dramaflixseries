@@ -173,6 +173,7 @@ export default function Index() {
           title="Em Alta"
           contents={trendingContents.length > 0 ? trendingContents : allContents.slice(0, 10)}
           icon="flame"
+          forceNew
         />
 
         {/* Lançamentos (New Releases) */}

@@ -9,6 +9,7 @@ interface ContentCarouselProps {
   contents: Content[];
   icon?: 'flame' | 'trending' | 'sparkles';
   mobileRows?: 1 | 2 | 4;
+  forceNew?: boolean;
 }
 
 const icons = {
@@ -17,7 +18,7 @@ const icons = {
   sparkles: Sparkles,
 };
 
-export function ContentCarousel({ title, contents, icon, mobileRows = 2 }: ContentCarouselProps) {
+export function ContentCarousel({ title, contents, icon, mobileRows = 2, forceNew = false }: ContentCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -82,7 +83,7 @@ export function ContentCarousel({ title, contents, icon, mobileRows = 2 }: Conte
               key={content.id}
               className="flex-shrink-0 w-[170px] lg:w-[200px] snap-start"
             >
-              <ContentCard content={content} />
+              <ContentCard content={content} forceNew={forceNew} />
             </div>
           ))}
         </div>
@@ -99,7 +100,7 @@ export function ContentCarousel({ title, contents, icon, mobileRows = 2 }: Conte
           >
             {contents.map((content) => (
               <div key={content.id}>
-                <ContentCard content={content} />
+                <ContentCard content={content} forceNew={forceNew} />
               </div>
             ))}
           </div>
