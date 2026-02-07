@@ -430,7 +430,7 @@ export default function Auth() {
         </div>
 
         {/* Title */}
-        <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-2 bg-gradient-to-r from-primary to-red-400 bg-clip-text text-transparent">
+        <h1 className="text-2xl md:text-4xl font-extrabold text-center mb-2 bg-gradient-to-r from-primary to-red-400 bg-clip-text text-transparent">
           Entretenimento Sem Limites
         </h1>
         <p className="text-xs md:text-base text-muted-foreground text-center mb-8">
