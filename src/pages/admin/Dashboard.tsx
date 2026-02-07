@@ -122,6 +122,7 @@ export default function AdminDashboard() {
   const menuItems = [
     { title: 'Membros', description: 'Gerenciar usuários e VIPs', icon: Users, href: '/admin/membros', color: 'bg-blue-500' },
     { title: 'Conteúdos', description: 'Gerenciar filmes e séries', icon: Film, href: '/admin/conteudos', color: 'bg-purple-500' },
+    { title: 'Usuários Online', description: 'Quem está assistindo agora', icon: Activity, href: '/admin/online', color: 'bg-green-500' },
     { title: 'Ranking de Cliques', description: 'Conteúdos mais populares', icon: MousePointer, href: '/admin/cliques', color: 'bg-cyan-500' },
     { title: 'Visualizações', description: 'Estatísticas de audiência', icon: Eye, href: '/admin/visualizacoes', color: 'bg-emerald-500' },
     { title: 'Webhooks', description: 'Visualizar compras', icon: Webhook, href: '/admin/webhooks', color: 'bg-green-500' },
