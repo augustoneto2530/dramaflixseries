@@ -157,9 +157,9 @@ Deno.serve(async (req) => {
         .eq('user_id', userId);
     }
 
-    // Liberar os dois conteúdos: A Confissão e Ligada a Honra
-    const contentIds = [CONFISSAO_CONTENT_ID, LIGADA_A_HONRA_CONTENT_ID];
-    const contentNames = ['A Confissão', 'Ligada a Honra'];
+    // Liberar os três conteúdos: A Confissão +18 (Parte 1), CONFISSÃO e Ligada a Honra
+    const contentIds = [CONFISSAO_PARTE1_CONTENT_ID, CONFISSAO_CONTENT_ID, LIGADA_A_HONRA_CONTENT_ID];
+    const contentNames = ['A Confissão +18 (Parte 1)', 'CONFISSÃO', 'Ligada a Honra'];
 
     for (let i = 0; i < contentIds.length; i++) {
       const { error: purchaseError } = await supabase

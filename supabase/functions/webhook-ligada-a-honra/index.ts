@@ -205,10 +205,10 @@ Deno.serve(async (req) => {
       .upsert({
         user_id: userId,
         content_id: LIGADA_A_HONRA_CONTENT_ID,
-        purchase_date: new Date().toISOString(),
-        amount_paid: amount,
+        purchased_at: new Date().toISOString(),
+        is_lifetime: true,
         transaction_id: transactionId,
-        payment_status: 'completed'
+        webhook_id: webhookData?.id || null,
       }, {
         onConflict: 'user_id,content_id'
       });
