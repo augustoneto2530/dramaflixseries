@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 // IDs dos conteúdos liberados neste webhook
+const CONFISSAO_PARTE1_CONTENT_ID = '0e8f3de8-5fdf-48f7-a6ab-f7004e3491ed';
 const CONFISSAO_CONTENT_ID = '9b7072cf-c7d4-4b38-a8a0-bc02d1ad88ed';
 const LIGADA_A_HONRA_CONTENT_ID = '840dbec5-3144-4069-80a8-8413bf3497a9';
 
@@ -156,9 +157,9 @@ Deno.serve(async (req) => {
         .eq('user_id', userId);
     }
 
-    // Liberar os dois conteúdos: A Confissão e Ligada a Honra
-    const contentIds = [CONFISSAO_CONTENT_ID, LIGADA_A_HONRA_CONTENT_ID];
-    const contentNames = ['A Confissão', 'Ligada a Honra'];
+    // Liberar os três conteúdos: A Confissão +18 (Parte 1), CONFISSÃO e Ligada a Honra
+    const contentIds = [CONFISSAO_PARTE1_CONTENT_ID, CONFISSAO_CONTENT_ID, LIGADA_A_HONRA_CONTENT_ID];
+    const contentNames = ['A Confissão +18 (Parte 1)', 'CONFISSÃO', 'Ligada a Honra'];
 
     for (let i = 0; i < contentIds.length; i++) {
       const { error: purchaseError } = await supabase
