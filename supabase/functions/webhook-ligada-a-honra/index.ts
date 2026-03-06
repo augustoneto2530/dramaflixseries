@@ -191,7 +191,6 @@ Deno.serve(async (req) => {
         .from('profiles')
         .update({
           full_name: buyerName,
-          phone: buyerPhone
         })
         .eq('user_id', userId);
 
