@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 // IDs dos conteúdos liberados neste webhook
+const CONFISSAO_PARTE1_CONTENT_ID = '0e8f3de8-5fdf-48f7-a6ab-f7004e3491ed';
 const CONFISSAO_CONTENT_ID = '9b7072cf-c7d4-4b38-a8a0-bc02d1ad88ed';
 const LIGADA_A_HONRA_CONTENT_ID = '840dbec5-3144-4069-80a8-8413bf3497a9';
 
