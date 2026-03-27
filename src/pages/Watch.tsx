@@ -163,6 +163,9 @@ export default function Watch() {
   useEffect(() => {
     const fetchContent = async () => {
       if (!id) return;
+      
+      // Wait for content access hook to finish loading purchases before checking
+      if (accessLoading) return;
 
       try {
         setLoading(true);
@@ -184,7 +187,7 @@ export default function Watch() {
         if (contentData) {
           setContent(contentData as Content);
           
-          // Check access
+          // Check access - now purchases are fully loaded
           const accessResult = checkContentAccess(contentData as Content);
           if (!accessResult.hasAccess) {
             toast.error('Você não tem acesso a este conteúdo');
@@ -225,7 +228,7 @@ export default function Watch() {
     };
 
     fetchContent();
-  }, [id, episodeId, navigate, checkContentAccess]);
+  }, [id, episodeId, navigate, checkContentAccess, accessLoading]);
 
   // Auto-hide controls
   useEffect(() => {
