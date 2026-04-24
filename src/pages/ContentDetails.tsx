@@ -44,7 +44,7 @@ export default function ContentDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { checkContentAccess, getBlockedReason } = useContentAccess();
+  const { checkContentAccess, getBlockedReason, loading: accessLoading } = useContentAccess();
   
   const [content, setContent] = useState<Content | null>(null);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
