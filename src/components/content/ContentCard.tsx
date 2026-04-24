@@ -26,14 +26,15 @@ const categoryStyles: Record<ContentCategory, string> = {
 export function ContentCard({ content, variant = 'default', forceNew = false }: ContentCardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { checkContentAccess, getBlockedReason, getPurchasedContentTitle } = useContentAccess();
+  const { checkContentAccess, getBlockedReason, getPurchasedContentTitle, loading: accessLoading } = useContentAccess();
   const [showAccessPopup, setShowAccessPopup] = useState(false);
   const [hasTrackedClick, setHasTrackedClick] = useState(false);
   
   const accessResult = checkContentAccess(content);
   const blockedReason = getBlockedReason(content);
-  // Check if blocked but DO NOT show visual overlay - only popup on click
-  const isBlocked = !accessResult.hasAccess && blockedReason;
+  // Don't treat as blocked while purchases are still loading — prevents the
+  // wrong "buy +18" popup from flashing for users who already bought the avulso
+  const isBlocked = !accessLoading && !accessResult.hasAccess && blockedReason;
 
   // Track click when card becomes visible/clicked
   const trackClick = async () => {
