@@ -204,7 +204,9 @@ export default function ContentDetails() {
     );
   }
 
-  const blockedReason = getBlockedReason(content);
+  // Only compute blocked reason after purchases finished loading — otherwise
+  // a user who bought a +18 standalone would briefly see the "buy +18" popup
+  const blockedReason = accessLoading ? null : getBlockedReason(content);
   const hasAccess = !blockedReason;
 
   return (
