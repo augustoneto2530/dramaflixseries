@@ -71,14 +71,48 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if user exists
-    const { data: existingUser } = await supabase.auth.admin.listUsers();
-    const user = existingUser?.users?.find(u => u.email === buyerEmail);
+    // Find user by email in profiles (much more reliable than listUsers which is paginated)
+    const emailNormalized = buyerEmail.toLowerCase().trim();
+    let userId: string | null = null;
 
-    if (user) {
-      // Update existing user profile
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .ilike('email', emailNormalized)
+      .maybeSingle();
+
+    if (existingProfile?.user_id) {
+      userId = existingProfile.user_id;
+      console.log('Usuário existente encontrado via profiles:', userId);
+    } else {
+      // Create new user
+      const tempPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
+      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+        email: emailNormalized,
+        password: tempPassword,
+        email_confirm: true,
+        user_metadata: { full_name: buyerName },
+      });
+
+      if (createError) {
+        // Pode ser que usuário já exista em auth mas perfil não — tentar buscar de novo
+        console.error('Erro ao criar usuário:', createError);
+        const { data: retryProfile } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .ilike('email', emailNormalized)
+          .maybeSingle();
+        if (retryProfile?.user_id) userId = retryProfile.user_id;
+      } else if (newUser?.user) {
+        userId = newUser.user.id;
+        // Aguarda trigger criar profile
+        await new Promise(r => setTimeout(r, 800));
+      }
+    }
+
+    if (userId) {
       const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + 1); // 1 month subscription
+      endDate.setMonth(endDate.getMonth() + 1);
 
       const { error: updateError } = await supabase
         .from('profiles')
@@ -87,59 +121,20 @@ Deno.serve(async (req) => {
           plan_type: 'monthly',
           subscription_start_date: new Date().toISOString(),
           subscription_end_date: endDate.toISOString(),
+          full_name: buyerName || undefined,
         })
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
-      if (updateError) {
-        console.error('Erro ao atualizar perfil:', updateError);
-      }
+      if (updateError) console.error('Erro ao atualizar perfil:', updateError);
 
-      // Update webhook as processed
       await supabase
         .from('purchase_webhooks')
-        .update({ processed: true, processed_at: new Date().toISOString(), user_id: user.id })
+        .update({ processed: true, processed_at: new Date().toISOString(), user_id: userId })
         .eq('id', webhookData.id);
 
-      console.log('Usuário existente atualizado:', buyerEmail);
+      console.log('Plano mensal ativado:', emailNormalized);
     } else {
-      // Create new user with random password
-      const tempPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
-      
-      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-        email: buyerEmail,
-        password: tempPassword,
-        email_confirm: true,
-        user_metadata: {
-          full_name: buyerName,
-        },
-      });
-
-      if (createError) {
-        console.error('Erro ao criar usuário:', createError);
-      } else if (newUser?.user) {
-        // Update profile with subscription
-        const endDate = new Date();
-        endDate.setMonth(endDate.getMonth() + 1);
-
-        await supabase
-          .from('profiles')
-          .update({
-            subscription_status: 'active',
-            plan_type: 'monthly',
-            subscription_start_date: new Date().toISOString(),
-            subscription_end_date: endDate.toISOString(),
-            full_name: buyerName,
-          })
-          .eq('user_id', newUser.user.id);
-
-        // Update webhook as processed
-        await supabase
-          .from('purchase_webhooks')
-          .update({ processed: true, processed_at: new Date().toISOString(), user_id: newUser.user.id })
-          .eq('id', webhookData.id);
-
-        console.log('Novo usuário criado:', buyerEmail);
-      }
+      console.error('Não foi possível resolver userId para:', emailNormalized);
     }
 
     return new Response(
