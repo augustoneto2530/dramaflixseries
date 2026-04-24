@@ -114,6 +114,13 @@ export default function ContentDetails() {
   const handlePlayClick = () => {
     if (!content) return;
 
+    // Wait for purchases to load before checking access (prevents false +18 popup
+    // for users who bought the standalone adult content)
+    if (accessLoading) {
+      toast.info('Verificando acesso...');
+      return;
+    }
+
     const accessResult = checkContentAccess(content);
     if (!accessResult.hasAccess) {
       setShowAccessPopup(true);
@@ -130,6 +137,8 @@ export default function ContentDetails() {
 
   const handleEpisodeClick = (episode: Episode) => {
     setSelectedEpisode(episode);
+    
+    if (accessLoading) return;
     
     // If user has access, navigate to watch immediately
     const accessResult = checkContentAccess(content!);
