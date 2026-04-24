@@ -105,35 +105,45 @@ Deno.serve(async (req) => {
 
     console.log('Webhook salvo:', webhookData.id);
 
-    // Check if user exists
-    const { data: existingUser } = await supabase.auth.admin.listUsers();
-    const user = existingUser?.users?.find(u => u.email === buyerEmail);
+    const emailNormalized = buyerEmail.toLowerCase().trim();
+    let userId: string | null = null;
 
-    let userId: string;
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .ilike('email', emailNormalized)
+      .maybeSingle();
 
-    if (user) {
-      userId = user.id;
-      console.log('Usuário existente encontrado:', userId);
+    if (existingProfile?.user_id) {
+      userId = existingProfile.user_id;
     } else {
-      // Create new user
       const tempPassword = crypto.randomUUID();
       const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-        email: buyerEmail,
+        email: emailNormalized,
         password: tempPassword,
         email_confirm: true,
-        user_metadata: {
-          full_name: buyerName
-        }
+        user_metadata: { full_name: buyerName }
       });
 
       if (createError) {
         console.error('Erro ao criar usuário:', createError);
-        throw createError;
+        const { data: retryProfile } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .ilike('email', emailNormalized)
+          .maybeSingle();
+        if (retryProfile?.user_id) {
+          userId = retryProfile.user_id;
+        } else {
+          throw createError;
+        }
+      } else {
+        userId = newUser.user.id;
+        await new Promise(r => setTimeout(r, 800));
       }
-
-      userId = newUser.user.id;
-      console.log('Novo usuário criado:', userId);
     }
+
+    if (!userId) throw new Error('Não foi possível resolver userId');
 
     // Calculate subscription dates (1 year)
     const now = new Date();
