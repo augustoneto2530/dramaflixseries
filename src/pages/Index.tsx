@@ -76,6 +76,7 @@ export default function Index() {
   const { heroContents, trendingContents, newContents, doramasContents, seriesContents, filmesContents, novelasContents, adultContents } = useMemo(() => {
     // Hero Slider: 7 specific titles in exact order from reference image
     const heroTitles = [
+      'de repente casados',
       'excitar a esposa virgem do mafioso',
       'sou obsessão mais perigosa dela',
       'o limite',
