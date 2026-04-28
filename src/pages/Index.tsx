@@ -100,6 +100,7 @@ export default function Index() {
     const nonAdultTrending = allContents.filter(c => c.is_trending && c.category !== 'adult');
     
     const priorityTitles = [
+      'de repente casados',
       'excitar a esposa virgem do mafioso',
       'ligada a honra',
       'obsessão mais perigosa',
