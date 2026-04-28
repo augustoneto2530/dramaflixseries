@@ -97,7 +97,7 @@ export default function Index() {
       .filter(Boolean) as Content[];
     
     const featured = allContents.filter(c => c.is_featured);
-    const adult = allContents.filter(c => c.category === 'adult');
+    const adult = allContents.filter(c => c.category === 'adult' || c.is_adult);
     const nonAdultTrending = allContents.filter(c => c.is_trending && c.category !== 'adult');
     
     const priorityTitles = [
@@ -120,7 +120,7 @@ export default function Index() {
       'banho gelado',
       'serviço de quarto'
     ];
-    const sortedTrending = [...adult, ...nonAdultTrending].sort((a, b) => {
+    const sortByPriority = (a: Content, b: Content) => {
       const aTitle = a.title.toLowerCase();
       const bTitle = b.title.toLowerCase();
       const aIndex = priorityTitles.findIndex(t => aTitle.includes(t));
@@ -130,7 +130,10 @@ export default function Index() {
       if (aIndex !== -1) return -1;
       if (bIndex !== -1) return 1;
       return 0;
-    });
+    };
+
+    const sortedTrending = [...adult, ...nonAdultTrending].sort(sortByPriority);
+    const sortedAdult = [...adult].sort(sortByPriority);
 
     return {
       heroContents: heroSorted.length > 0 ? heroSorted : featured.slice(0, 4),
@@ -140,7 +143,7 @@ export default function Index() {
       seriesContents: allContents.filter(c => c.category === 'series'),
       filmesContents: allContents.filter(c => c.category === 'filmes'),
       novelasContents: allContents.filter(c => c.category === 'novelas'),
-      adultContents: adult
+      adultContents: sortedAdult
     };
   }, [allContents]);
 
