@@ -47,11 +47,14 @@ export default function Category() {
 
       try {
         setLoading(true);
-        const { data, error } = await supabase
+        const query = supabase
           .from('contents')
           .select('*')
-          .eq('category', category as ContentCategory)
           .order('created_at', { ascending: false });
+
+        const { data, error } = category === 'adult'
+          ? await query.or('category.eq.adult,is_adult.eq.true')
+          : await query.eq('category', category as ContentCategory);
 
         if (error) {
           console.error('Error fetching contents:', error);

@@ -127,8 +127,8 @@ export function useContentAccess() {
       return null;
     }
 
-    // PRIORITY 1: Adult content check - ALWAYS show adult popup for +18 content
-    // regardless of user's plan type (single_content, monthly without adult, etc.)
+    // PRIORITY 1: Adult content without a matching standalone purchase shows adult popup.
+    // Matching standalone purchases are already allowed by checkContentAccess above.
     if (content.is_adult) {
       return 'adult';
     }
