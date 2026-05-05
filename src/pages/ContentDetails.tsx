@@ -361,15 +361,19 @@ export default function ContentDetails() {
               >
                 {/* Thumbnail */}
                 <div className="relative flex-shrink-0 w-40 aspect-video rounded-md overflow-hidden bg-muted">
-                  {episode.thumbnail_url ? (
-                    <img
-                      src={episode.thumbnail_url}
-                      alt={episode.title || `Episódio ${episode.episode_number}`}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Film className="h-8 w-8 text-muted-foreground" />
+                  <img
+                    src={episode.thumbnail_url || content.cover_image_url || '/placeholder.svg'}
+                    alt={episode.title || `Episódio ${episode.episode_number}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const img = e.currentTarget;
+                      const fallback = content.cover_image_url || '/placeholder.svg';
+                      if (img.src !== fallback) img.src = fallback;
+                    }}
+                  />
+                  {hasAccess && (
+                    <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Play className="h-8 w-8 text-white fill-white" />
                     </div>
                   )}
                   {!hasAccess && (
