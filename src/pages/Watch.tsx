@@ -400,7 +400,7 @@ export default function Watch() {
         }}
         playsInline
         preload="metadata"
-        crossOrigin="anonymous"
+        
         autoPlay
       />
 
