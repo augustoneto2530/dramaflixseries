@@ -35,7 +35,7 @@ export default function Watch() {
   const [searchParams] = useSearchParams();
   const episodeId = searchParams.get('ep');
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile, isLoading: authLoading } = useAuth();
   const { checkContentAccess, loading: accessLoading } = useContentAccess();
   
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -164,8 +164,11 @@ export default function Watch() {
     const fetchContent = async () => {
       if (!id) return;
       
-      // Wait for content access hook to finish loading purchases before checking
-      if (accessLoading) return;
+      // Wait for auth, profile and purchases to finish loading before checking access.
+      // Without this, profile is still null and access check incorrectly fails for
+      // users that just signed in or that have a combo subscription (annual + adult).
+      if (authLoading || accessLoading) return;
+      if (user && !profile) return;
 
       try {
         setLoading(true);
@@ -187,7 +190,7 @@ export default function Watch() {
         if (contentData) {
           setContent(contentData as Content);
           
-          // Check access - now purchases are fully loaded
+          // Check access - now profile and purchases are fully loaded
           const accessResult = checkContentAccess(contentData as Content);
           if (!accessResult.hasAccess) {
             toast.error('Você não tem acesso a este conteúdo');
@@ -228,7 +231,7 @@ export default function Watch() {
     };
 
     fetchContent();
-  }, [id, episodeId, navigate, checkContentAccess, accessLoading]);
+  }, [id, episodeId, navigate, checkContentAccess, accessLoading, authLoading, user, profile]);
 
   // Auto-hide controls
   useEffect(() => {
