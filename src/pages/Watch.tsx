@@ -394,6 +394,13 @@ export default function Watch() {
         onPause={handleVideoPause}
         onEnded={handleVideoEnded}
         onClick={togglePlay}
+        onError={(e) => {
+          console.error('Video error:', e);
+          toast.error('Erro ao carregar vídeo. Verifique sua conexão e tente novamente.');
+        }}
+        playsInline
+        preload="metadata"
+        
         autoPlay
       />
 
