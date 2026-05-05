@@ -1,0 +1,1 @@
+UPDATE episodes SET thumbnail_url = NULL WHERE thumbnail_url LIKE '%leftsuzgaasmbkabldoz%';
