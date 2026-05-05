@@ -35,7 +35,7 @@ export default function Watch() {
   const [searchParams] = useSearchParams();
   const episodeId = searchParams.get('ep');
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile, isLoading: authLoading } = useAuth();
   const { checkContentAccess, loading: accessLoading } = useContentAccess();
   
   const videoRef = useRef<HTMLVideoElement>(null);
