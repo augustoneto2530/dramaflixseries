@@ -12,20 +12,64 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+    // Validate the caller's JWT and bind userId to the authenticated user
+    const authHeader = req.headers.get('Authorization') ?? '';
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    if (!token) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Não autenticado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data: userData, error: userErr } = await authClient.auth.getUser();
+    if (userErr || !userData?.user) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Sessão inválida' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { email, userId } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const email: string | undefined = body?.email;
+    const requestedUserId: string | undefined = body?.userId;
 
-    if (!email || !userId) {
+    if (!email) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Email e userId são obrigatórios' }),
+        JSON.stringify({ success: false, error: 'Email é obrigatório' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const trimmedEmail = email.trim().toLowerCase();
+    // Always trust the authenticated user id; reject mismatches
+    const userId = userData.user.id;
+    if (requestedUserId && requestedUserId !== userId) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Usuário não autorizado' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // The authenticated user's email must match the email whose purchases we're attributing
+    const callerEmail = (userData.user.email ?? '').toLowerCase().trim();
+    const trimmedEmail = String(email).trim().toLowerCase();
+    if (callerEmail && callerEmail !== trimmedEmail) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Email não corresponde à conta autenticada' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     console.log('Processing purchases for user:', trimmedEmail, userId);
+
 
     // Find all webhooks for this email that need processing
     const { data: webhooks, error: webhookError } = await supabase

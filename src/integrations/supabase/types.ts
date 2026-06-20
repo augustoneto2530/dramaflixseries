@@ -468,6 +468,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_email_purchase_info: {
+        Args: { p_email: string }
+        Returns: {
+          buyer_name: string
+          has_purchase: boolean
+          product_name: string
+        }[]
+      }
+      email_has_profile: { Args: { p_email: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
