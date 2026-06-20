@@ -99,12 +99,10 @@ export default function Auth() {
 
       const trimmedEmail = email.trim().toLowerCase();
 
-      // Check if email exists in purchase_webhooks (any webhook, processed or not)
-      const { data: webhooks, error: webhookError } = await supabase
-        .from('purchase_webhooks')
-        .select('buyer_name, product_name, processed')
-        .eq('buyer_email', trimmedEmail)
-        .limit(1);
+      // Check if email exists in purchase_webhooks via secure RPC (no public read of table)
+      const { data: purchaseInfo, error: webhookError } = await supabase
+        .rpc('check_email_purchase_info', { p_email: trimmedEmail })
+        .maybeSingle();
 
       if (webhookError) {
         console.error('Error checking webhook:', webhookError);
@@ -117,7 +115,7 @@ export default function Auth() {
         return;
       }
 
-      if (!webhooks || webhooks.length === 0) {
+      if (!purchaseInfo?.has_purchase) {
         toast({
           title: 'Acesso não autorizado',
           description: 'Apenas usuários compradores podem acessar. Adquira um plano para começar!',
@@ -133,27 +131,22 @@ export default function Auth() {
 
       // Email is valid - check if user already has an account by trying to sign in
       setWebhookData({
-        buyerName: webhooks[0].buyer_name,
-        productName: webhooks[0].product_name,
+        buyerName: purchaseInfo.buyer_name,
+        productName: purchaseInfo.product_name,
       });
-      
+
       // Pre-fill the name if available from webhook
-      if (webhooks[0].buyer_name) {
-        setFullName(webhooks[0].buyer_name);
+      if (purchaseInfo.buyer_name) {
+        setFullName(purchaseInfo.buyer_name);
       }
 
-      // Check if user already has a profile (meaning they already created their account)
-      const { data: existingProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('email', trimmedEmail)
-        .single();
+      // Check if a profile already exists for this email (no public read of profiles)
+      const { data: hasProfile, error: profileError } = await supabase
+        .rpc('email_has_profile', { p_email: trimmedEmail });
 
-      console.log('Profile check result:', existingProfile, profileError);
+      console.log('Profile check result:', hasProfile, profileError);
 
-      // If profile exists with user_id, user already has an account - go to login
-      // If no profile or profile error (PGRST116 = not found), user needs to create account
-      if (existingProfile?.user_id) {
+      if (hasProfile) {
         setHasExistingAccount(true);
         setStep('login');
       } else {
@@ -163,6 +156,7 @@ export default function Auth() {
       }
 
       setEmail(trimmedEmail);
+
     } catch (err) {
       console.error('Error in email validation:', err);
       toast({
