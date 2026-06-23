@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshProfile = async () => {
-    const currentUser = user ?? session?.user;
+    const currentUser = user ?? session?.user ?? (await supabase.auth.getSession()).data.session?.user;
 
     if (!currentUser) return;
 
