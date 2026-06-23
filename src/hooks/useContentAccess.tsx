@@ -81,7 +81,7 @@ export function useContentAccess() {
     }
 
     // Not logged in
-    if (!user || !profile) {
+    if (!user) {
       return { hasAccess: false, accessType: 'none', purchasedContentIds };
     }
 
@@ -95,6 +95,10 @@ export function useContentAccess() {
     // +18 and launches remain gated below by plan/VIP/adult/single-content access.
     if (!content.is_adult && !content.is_new) {
       return { hasAccess: true, accessType: 'full', purchasedContentIds };
+    }
+
+    if (!profile) {
+      return { hasAccess: false, accessType: 'none', purchasedContentIds };
     }
 
     // VIP has full access
