@@ -62,12 +62,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const ensureCurrentUserProfile = async (fullName?: string | null) => {
+    try {
+      const { data, error } = await supabase.rpc('ensure_current_user_profile', {
+        p_full_name: fullName || undefined,
+      });
+
+      if (error) {
+        console.error('Error ensuring profile:', error);
+        return null;
+      }
+
+      return data as Profile;
+    } catch (err) {
+      console.error('Error in ensureCurrentUserProfile:', err);
+      return null;
+    }
+  };
+
   const refreshProfile = async () => {
     const currentUser = user ?? session?.user ?? (await supabase.auth.getSession()).data.session?.user;
 
     if (!currentUser) return;
 
-    const profileData = await fetchProfile(currentUser.id);
+    const profileData =
+      (await ensureCurrentUserProfile(currentUser.user_metadata?.full_name)) ??
+      (await fetchProfile(currentUser.id));
     setProfile(profileData);
     const adminStatus = await checkAdminRole(currentUser.id);
     setIsAdmin(adminStatus);
@@ -90,7 +110,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Use setTimeout to avoid race conditions with Supabase internals
           setTimeout(async () => {
             if (!isMounted) return;
-            const profileData = await fetchProfile(currentSession.user.id);
+            const profileData =
+              (await ensureCurrentUserProfile(currentSession.user.user_metadata?.full_name)) ??
+              (await fetchProfile(currentSession.user.id));
             if (isMounted) setProfile(profileData);
             const adminStatus = await checkAdminRole(currentSession.user.id);
             if (isMounted) setIsAdmin(adminStatus);
@@ -122,7 +144,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(existingSession);
           setUser(existingSession.user);
           
-          const profileData = await fetchProfile(existingSession.user.id);
+          const profileData =
+            (await ensureCurrentUserProfile(existingSession.user.user_metadata?.full_name)) ??
+            (await fetchProfile(existingSession.user.id));
           if (isMounted) setProfile(profileData);
           const adminStatus = await checkAdminRole(existingSession.user.id);
           if (isMounted) setIsAdmin(adminStatus);

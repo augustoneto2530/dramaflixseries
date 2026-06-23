@@ -81,7 +81,7 @@ export function useContentAccess() {
     }
 
     // Not logged in
-    if (!user || !profile) {
+    if (!user) {
       return { hasAccess: false, accessType: 'none', purchasedContentIds };
     }
 
@@ -89,6 +89,16 @@ export function useContentAccess() {
     // This allows users with single_content purchases to access their specific content
     if (purchasedContentIds.includes(content.id)) {
       return { hasAccess: true, accessType: 'single_content', purchasedContentIds };
+    }
+
+    // Signed-in users can watch regular catalog content without a purchase.
+    // +18 and launches remain gated below by plan/VIP/adult/single-content access.
+    if (!content.is_adult && !content.is_new) {
+      return { hasAccess: true, accessType: 'full', purchasedContentIds };
+    }
+
+    if (!profile) {
+      return { hasAccess: false, accessType: 'none', purchasedContentIds };
     }
 
     // VIP has full access
