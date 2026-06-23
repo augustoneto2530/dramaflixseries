@@ -63,12 +63,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshProfile = async () => {
-    if (user) {
-      const profileData = await fetchProfile(user.id);
-      setProfile(profileData);
-      const adminStatus = await checkAdminRole(user.id);
-      setIsAdmin(adminStatus);
-    }
+    const currentUser = user ?? session?.user ?? (await supabase.auth.getSession()).data.session?.user;
+
+    if (!currentUser) return;
+
+    const profileData = await fetchProfile(currentUser.id);
+    setProfile(profileData);
+    const adminStatus = await checkAdminRole(currentUser.id);
+    setIsAdmin(adminStatus);
   };
 
   useEffect(() => {

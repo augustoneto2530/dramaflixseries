@@ -31,7 +31,7 @@ export default function Auth() {
   const [webhookData, setWebhookData] = useState<WebhookData | null>(null);
   const [hasExistingAccount, setHasExistingAccount] = useState(false);
 
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, refreshProfile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -256,6 +256,24 @@ export default function Auth() {
     }
   };
 
+  const syncPurchasesForAuthenticatedUser = async (targetEmail: string) => {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+
+    if (!userId) return;
+
+    const { error } = await supabase.functions.invoke('process-user-purchases', {
+      body: { email: targetEmail.trim().toLowerCase(), userId },
+    });
+
+    if (error) {
+      console.error('Error processing purchases:', error);
+      return;
+    }
+
+    await refreshProfile();
+  };
+
   // Step 3: Login (returning user)
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -286,6 +304,7 @@ export default function Auth() {
           variant: 'destructive',
         });
       } else {
+        await syncPurchasesForAuthenticatedUser(email);
         toast({
           title: 'Bem-vindo de volta!',
           description: 'Login realizado com sucesso.',
