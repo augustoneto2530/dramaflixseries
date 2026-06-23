@@ -99,45 +99,24 @@ export default function Auth() {
 
       const trimmedEmail = email.trim().toLowerCase();
 
-      // Check if email exists in purchase_webhooks via secure RPC (no public read of table)
-      const { data: purchaseInfo, error: webhookError } = await supabase
+      // Open signup: webhook purchase no longer required to access the platform.
+      // Adult (+18) and premium content remain blocked unless the user has the
+      // appropriate purchase/entitlement (enforced elsewhere via has_adult_access
+      // and user_content_purchases).
+      const { data: purchaseInfo } = await supabase
         .rpc('check_email_purchase_info', { p_email: trimmedEmail })
         .maybeSingle();
 
-      if (webhookError) {
-        console.error('Error checking webhook:', webhookError);
-        toast({
-          title: 'Erro',
-          description: 'Erro ao verificar acesso. Tente novamente.',
-          variant: 'destructive',
+      if (purchaseInfo?.has_purchase) {
+        setWebhookData({
+          buyerName: purchaseInfo.buyer_name,
+          productName: purchaseInfo.product_name,
         });
-        setIsLoading(false);
-        return;
-      }
-
-      if (!purchaseInfo?.has_purchase) {
-        toast({
-          title: 'Acesso não autorizado',
-          description: 'Apenas usuários compradores podem acessar. Adquira um plano para começar!',
-          variant: 'destructive',
-        });
-        // Redirect to plans page after short delay
-        setTimeout(() => {
-          navigate('/planos');
-        }, 2000);
-        setIsLoading(false);
-        return;
-      }
-
-      // Email is valid - check if user already has an account by trying to sign in
-      setWebhookData({
-        buyerName: purchaseInfo.buyer_name,
-        productName: purchaseInfo.product_name,
-      });
-
-      // Pre-fill the name if available from webhook
-      if (purchaseInfo.buyer_name) {
-        setFullName(purchaseInfo.buyer_name);
+        if (purchaseInfo.buyer_name) {
+          setFullName(purchaseInfo.buyer_name);
+        }
+      } else {
+        setWebhookData(null);
       }
 
       // Check if a profile already exists for this email (no public read of profiles)
