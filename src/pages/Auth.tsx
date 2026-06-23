@@ -208,7 +208,7 @@ export default function Auth() {
       const { data: sessionData } = await supabase.auth.getSession();
       if (sessionData?.session?.user?.id) {
         await supabase.rpc('ensure_current_user_profile', {
-          p_full_name: fullName || webhookData?.buyerName || null,
+          p_full_name: fullName || webhookData?.buyerName || undefined,
         });
 
         console.log('Processing pending purchases for new user:', sessionData.session.user.id);
@@ -246,7 +246,7 @@ export default function Auth() {
     if (!userId) return;
 
     await supabase.rpc('ensure_current_user_profile', {
-      p_full_name: null,
+      p_full_name: undefined,
     });
 
     const { error } = await supabase.functions.invoke('process-user-purchases', {
