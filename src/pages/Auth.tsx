@@ -207,6 +207,10 @@ export default function Auth() {
       // Get the new user's ID and process any pending purchases
       const { data: sessionData } = await supabase.auth.getSession();
       if (sessionData?.session?.user?.id) {
+        await supabase.rpc('ensure_current_user_profile', {
+          p_full_name: fullName || webhookData?.buyerName || null,
+        });
+
         console.log('Processing pending purchases for new user:', sessionData.session.user.id);
         try {
           await supabase.functions.invoke('process-user-purchases', {
@@ -240,6 +244,10 @@ export default function Auth() {
     const userId = sessionData.session?.user?.id;
 
     if (!userId) return;
+
+    await supabase.rpc('ensure_current_user_profile', {
+      p_full_name: null,
+    });
 
     const { error } = await supabase.functions.invoke('process-user-purchases', {
       body: { email: targetEmail.trim().toLowerCase(), userId },
@@ -484,12 +492,12 @@ export default function Auth() {
             {/* Info box - buyers only */}
             <div className="mb-4 p-4 bg-muted/40 rounded-xl border border-border">
               <p className="text-sm text-muted-foreground text-center mb-1">
-                <strong>Apenas compradores podem acessar.</strong>
+                <strong>Cadastro liberado para todos.</strong>
               </p>
               <p className="text-xs text-muted-foreground text-center">
-                Ainda não tem acesso?{' '}
+                +18 e lançamentos continuam exclusivos.{' '}
                 <Link to="/planos" className="text-primary hover:underline font-medium">
-                  Adquira seu plano aqui
+                  Ver planos
                 </Link>
               </p>
             </div>
@@ -535,8 +543,8 @@ export default function Auth() {
                 <CheckCircle className="h-5 w-5 text-amber-500" />
               </div>
               <div>
-                <h2 className="font-semibold text-foreground">Compra identificada!</h2>
-                <p className="text-sm text-muted-foreground">Escolha sua senha abaixo</p>
+                <h2 className="font-semibold text-foreground">Acesso liberado!</h2>
+                <p className="text-sm text-muted-foreground">Crie sua senha abaixo</p>
               </div>
             </div>
 
