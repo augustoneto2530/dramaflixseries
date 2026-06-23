@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const ensureCurrentUserProfile = async (fullName?: string | null) => {
     try {
       const { data, error } = await supabase.rpc('ensure_current_user_profile', {
-        p_full_name: fullName ?? null,
+        p_full_name: fullName || undefined,
       });
 
       if (error) {
