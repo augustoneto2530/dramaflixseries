@@ -477,6 +477,32 @@ export type Database = {
         }[]
       }
       email_has_profile: { Args: { p_email: string }; Returns: boolean }
+      ensure_current_user_profile: {
+        Args: { p_full_name?: string }
+        Returns: {
+          adult_access_end_date: string | null
+          adult_access_start_date: string | null
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          has_adult_access: boolean
+          id: string
+          is_vip: boolean
+          plan_type: Database["public"]["Enums"]["plan_type"] | null
+          subscription_end_date: string | null
+          subscription_start_date: string | null
+          subscription_status: Database["public"]["Enums"]["subscription_status"]
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
