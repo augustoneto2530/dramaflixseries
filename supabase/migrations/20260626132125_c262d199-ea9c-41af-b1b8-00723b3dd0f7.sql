@@ -1,0 +1,1 @@
+DELETE FROM public.user_roles WHERE role = 'admin' AND user_id IN (SELECT user_id FROM public.profiles WHERE email = 'grupo@lowify.com.br');
