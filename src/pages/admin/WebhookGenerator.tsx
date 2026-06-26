@@ -115,7 +115,7 @@ export default function AdminWebhookGenerator() {
           <CardContent className="text-sm text-muted-foreground space-y-2">
             <p>1. Encontre o conteúdo que deseja vender individualmente</p>
             <p>2. Clique em <strong>"Copiar URL"</strong> para copiar o webhook específico</p>
-            <p>3. Configure este URL na sua plataforma de pagamento (Lowify, Hotmart, etc.)</p>
+            <p>3. Configure este URL na sua plataforma de pagamento (Hotmart, Monetizze, etc.)</p>
             <p>4. Quando uma compra for confirmada, o usuário receberá acesso apenas a este conteúdo</p>
           </CardContent>
         </Card>
