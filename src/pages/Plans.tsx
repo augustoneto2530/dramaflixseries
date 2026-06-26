@@ -25,7 +25,7 @@ export default function Plans() {
   };
 
   const handleAnnualClick = () => {
-    window.open("https://ggcheckout.app/checkout/v5/7OKYddFAbmOKkwAJAwu5", "_blank");
+    window.open("https://ggcheckout.app/checkout/v5/mQb46CSFk2UVrn1L5lGE", "_blank");
   };
 
   return (
