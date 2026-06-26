@@ -1,25 +1,15 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Layout } from '@/components/layout/Layout';
-import { Content } from '@/lib/types';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { useContentAccess } from '@/hooks/useContentAccess';
-import { ContentAccessPopup } from '@/components/content/ContentAccessPopup';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Play, 
-  Plus, 
-  Star, 
-  Calendar, 
-  Clock, 
-  Film,
-  ChevronLeft,
-  Lock,
-  Check
-} from 'lucide-react';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { Layout } from "@/components/layout/Layout";
+import { Content } from "@/lib/types";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useContentAccess } from "@/hooks/useContentAccess";
+import { ContentAccessPopup } from "@/components/content/ContentAccessPopup";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Play, Plus, Star, Calendar, Clock, Film, ChevronLeft, Lock, Check } from "lucide-react";
+import { toast } from "sonner";
 
 interface Episode {
   id: string;
@@ -33,11 +23,11 @@ interface Episode {
 }
 
 const categoryLabels: Record<string, string> = {
-  doramas: 'Dorama',
-  adult: '+18',
-  novelas: 'Novela',
-  filmes: 'Filme',
-  series: 'Série',
+  doramas: "Dorama",
+  adult: "+18",
+  novelas: "Novela",
+  filmes: "Filme",
+  series: "Série",
 };
 
 export default function ContentDetails() {
@@ -45,7 +35,7 @@ export default function ContentDetails() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { checkContentAccess, getBlockedReason, loading: accessLoading } = useContentAccess();
-  
+
   const [content, setContent] = useState<Content | null>(null);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,16 +49,16 @@ export default function ContentDetails() {
 
       try {
         setLoading(true);
-        
+
         // Fetch content
         const { data: contentData, error: contentError } = await supabase
-          .from('contents')
-          .select('*')
-          .eq('id', id)
+          .from("contents")
+          .select("*")
+          .eq("id", id)
           .single();
 
         if (contentError) {
-          console.error('Error fetching content:', contentError);
+          console.error("Error fetching content:", contentError);
           return;
         }
 
@@ -78,10 +68,10 @@ export default function ContentDetails() {
 
         // Fetch episodes
         const { data: episodesData, error: episodesError } = await supabase
-          .from('episodes')
-          .select('*')
-          .eq('content_id', id)
-          .order('episode_number', { ascending: true });
+          .from("episodes")
+          .select("*")
+          .eq("content_id", id)
+          .order("episode_number", { ascending: true });
 
         if (!episodesError && episodesData) {
           setEpisodes(episodesData);
@@ -93,16 +83,16 @@ export default function ContentDetails() {
         // Check watchlist
         if (user) {
           const { data: watchlistData } = await supabase
-            .from('user_watchlist')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('content_id', id)
+            .from("user_watchlist")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("content_id", id)
             .single();
-          
+
           setIsInWatchlist(!!watchlistData);
         }
       } catch (error) {
-        console.error('Error:', error);
+        console.error("Error:", error);
       } finally {
         setLoading(false);
       }
@@ -117,7 +107,7 @@ export default function ContentDetails() {
     // Wait for purchases to load before checking access (prevents false +18 popup
     // for users who bought the standalone adult content)
     if (accessLoading) {
-      toast.info('Verificando acesso...');
+      toast.info("Verificando acesso...");
       return;
     }
 
@@ -137,9 +127,9 @@ export default function ContentDetails() {
 
   const handleEpisodeClick = (episode: Episode) => {
     setSelectedEpisode(episode);
-    
+
     if (accessLoading) return;
-    
+
     // If user has access, navigate to watch immediately
     const accessResult = checkContentAccess(content!);
     if (accessResult.hasAccess) {
@@ -149,7 +139,7 @@ export default function ContentDetails() {
 
   const handleToggleWatchlist = async () => {
     if (!user) {
-      toast.error('Faça login para adicionar à sua lista');
+      toast.error("Faça login para adicionar à sua lista");
       return;
     }
 
@@ -157,25 +147,19 @@ export default function ContentDetails() {
 
     try {
       if (isInWatchlist) {
-        await supabase
-          .from('user_watchlist')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('content_id', content.id);
-        
+        await supabase.from("user_watchlist").delete().eq("user_id", user.id).eq("content_id", content.id);
+
         setIsInWatchlist(false);
-        toast.success('Removido da sua lista');
+        toast.success("Removido da sua lista");
       } else {
-        await supabase
-          .from('user_watchlist')
-          .insert({ user_id: user.id, content_id: content.id });
-        
+        await supabase.from("user_watchlist").insert({ user_id: user.id, content_id: content.id });
+
         setIsInWatchlist(true);
-        toast.success('Adicionado à sua lista');
+        toast.success("Adicionado à sua lista");
       }
     } catch (error) {
-      console.error('Error updating watchlist:', error);
-      toast.error('Erro ao atualizar lista');
+      console.error("Error updating watchlist:", error);
+      toast.error("Erro ao atualizar lista");
     }
   };
 
@@ -216,7 +200,7 @@ export default function ContentDetails() {
         {/* Background Image */}
         <div className="absolute inset-0">
           <img
-            src={content.banner_image_url || content.cover_image_url || '/placeholder.svg'}
+            src={content.banner_image_url || content.cover_image_url || "/placeholder.svg"}
             alt={content.title}
             className="w-full h-full object-cover"
           />
@@ -226,8 +210,8 @@ export default function ContentDetails() {
 
         {/* Content Info */}
         <div className="relative z-10 container mx-auto px-4 pt-24 md:pt-32 pb-8">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -237,23 +221,15 @@ export default function ContentDetails() {
           <div className="max-w-3xl">
             {/* Badges */}
             <div className="flex flex-wrap gap-2 mb-4">
-              {content.is_new && (
-                <Badge className="bg-accent text-accent-foreground">
-                  Lançamento
-                </Badge>
-              )}
+              {content.is_new && <Badge className="bg-accent text-accent-foreground">Lançamento</Badge>}
               <Badge variant="outline" className={`category-${content.category}`}>
                 {categoryLabels[content.category]}
               </Badge>
-              {content.is_adult && (
-                <Badge variant="destructive">+18</Badge>
-              )}
+              {content.is_adult && <Badge variant="destructive">+18</Badge>}
             </div>
 
             {/* Title */}
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              {content.title}
-            </h1>
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">{content.title}</h1>
 
             {/* Meta Info */}
             <div className="flex flex-wrap items-center gap-4 text-muted-foreground mb-6">
@@ -286,16 +262,14 @@ export default function ContentDetails() {
 
             {/* Description */}
             {content.description && (
-              <p className="text-lg text-muted-foreground mb-8 max-w-2xl">
-                {content.description}
-              </p>
+              <p className="text-lg text-muted-foreground mb-8 max-w-2xl">{content.description}</p>
             )}
 
             {/* Actions */}
             <div className="flex flex-wrap gap-4">
               <Button
                 size="lg"
-                className={`${hasAccess ? 'brand-gradient glow-primary' : ''} gap-2`}
+                className={`${hasAccess ? "brand-gradient glow-primary" : ""} gap-2`}
                 onClick={handlePlayClick}
               >
                 {hasAccess ? (
@@ -311,12 +285,7 @@ export default function ContentDetails() {
                 )}
               </Button>
 
-              <Button
-                size="lg"
-                variant="outline"
-                className="gap-2"
-                onClick={handleToggleWatchlist}
-              >
+              <Button size="lg" variant="outline" className="gap-2" onClick={handleToggleWatchlist}>
                 {isInWatchlist ? (
                   <>
                     <Check className="h-5 w-5" />
@@ -349,25 +318,25 @@ export default function ContentDetails() {
       {episodes.length > 0 && (
         <div className="container mx-auto px-4 py-12">
           <h2 className="text-2xl font-bold mb-6">Episódios</h2>
-          
+
           <div className="grid gap-4">
             {episodes.map((episode) => (
               <div
                 key={episode.id}
                 className={`flex gap-4 p-4 rounded-lg bg-card border transition-all cursor-pointer hover:border-primary ${
-                  selectedEpisode?.id === episode.id ? 'border-primary' : 'border-border'
+                  selectedEpisode?.id === episode.id ? "border-primary" : "border-border"
                 }`}
                 onClick={() => handleEpisodeClick(episode)}
               >
                 {/* Thumbnail */}
                 <div className="relative flex-shrink-0 w-40 aspect-video rounded-md overflow-hidden bg-muted">
                   <img
-                    src={episode.thumbnail_url || content.cover_image_url || '/placeholder.svg'}
+                    src={episode.thumbnail_url || content.cover_image_url || "/placeholder.svg"}
                     alt={episode.title || `Episódio ${episode.episode_number}`}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       const img = e.currentTarget;
-                      const fallback = content.cover_image_url || '/placeholder.svg';
+                      const fallback = content.cover_image_url || "/placeholder.svg";
                       if (img.src !== fallback) img.src = fallback;
                     }}
                   />
@@ -392,9 +361,7 @@ export default function ContentDetails() {
                         {episode.title && `: ${episode.title}`}
                       </h3>
                       {episode.description && (
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                          {episode.description}
-                        </p>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{episode.description}</p>
                       )}
                     </div>
                     {episode.duration_minutes && (
@@ -414,8 +381,8 @@ export default function ContentDetails() {
       <ContentAccessPopup
         open={showAccessPopup}
         onOpenChange={setShowAccessPopup}
-        type={blockedReason || 'premium'}
-        adultPurchaseLink="https://pay.lowify.com.br/checkout?product_id=PfECsZ"
+        type={blockedReason || "premium"}
+        adultPurchaseLink="https://ggcheckout.app/checkout/v5/g8LEHQoVW7eQKMi2z1rY"
       />
     </Layout>
   );

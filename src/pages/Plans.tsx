@@ -1,31 +1,31 @@
-import { Link } from 'react-router-dom';
-import { Check, Crown, Calendar, Tv, Flame, Star, Ban, Heart, Sparkles, Shield, Zap, Lock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Layout } from '@/components/layout/Layout';
+import { Link } from "react-router-dom";
+import { Check, Crown, Calendar, Tv, Flame, Star, Ban, Heart, Sparkles, Shield, Zap, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Layout } from "@/components/layout/Layout";
 
 const monthlyFeatures = [
-  { icon: Tv, text: '+10.000 minisséries e doramas' },
-  { icon: Check, text: 'Todos os episódios liberados' },
-  { icon: Sparkles, text: 'Assista em qualquer dispositivo' },
+  { icon: Tv, text: "+10.000 minisséries e doramas" },
+  { icon: Check, text: "Todos os episódios liberados" },
+  { icon: Sparkles, text: "Assista em qualquer dispositivo" },
 ];
 
 const annualFeatures = [
-  { icon: Tv, text: 'Séries, filmes, doramas e novelas' },
-  { icon: Flame, text: 'Conteúdo +18 exclusivo 🔥' },
-  { icon: Star, text: 'Qualidade HD e Full HD' },
-  { icon: Ban, text: 'Sem anúncios irritantes' },
-  { icon: Heart, text: 'Atualizações constantes' },
-  { icon: Sparkles, text: 'Lançamentos diários automáticos' },
-  { icon: Shield, text: 'Sem mensalidade surpresa!' },
+  { icon: Tv, text: "Séries, filmes, doramas e novelas" },
+  { icon: Flame, text: "Conteúdo +18 exclusivo 🔥" },
+  { icon: Star, text: "Qualidade HD e Full HD" },
+  { icon: Ban, text: "Sem anúncios irritantes" },
+  { icon: Heart, text: "Atualizações constantes" },
+  { icon: Sparkles, text: "Lançamentos diários automáticos" },
+  { icon: Shield, text: "Sem mensalidade surpresa!" },
 ];
 
 export default function Plans() {
   const handleMonthlyClick = () => {
-    window.open('https://pay.lowify.com.br/checkout?product_id=FKW32r', '_blank');
+    window.open("https://ggcheckout.app/checkout/v5/7OKYddFAbmOKkwAJAwu5", "_blank");
   };
 
   const handleAnnualClick = () => {
-    window.open('https://pay.lowify.com.br/checkout?product_id=Z3NV2k', '_blank');
+    window.open("https://ggcheckout.app/checkout/v5/7OKYddFAbmOKkwAJAwu5", "_blank");
   };
 
   return (
@@ -40,9 +40,7 @@ export default function Plans() {
             <h1 className="text-3xl md:text-4xl font-bold mb-3">
               <span className="brand-gradient-text">Escolha seu plano</span>
             </h1>
-            <p className="text-muted-foreground">
-              Desbloqueie todo o conteúdo agora mesmo
-            </p>
+            <p className="text-muted-foreground">Desbloqueie todo o conteúdo agora mesmo</p>
           </div>
 
           {/* Plans Grid */}
@@ -84,11 +82,7 @@ export default function Plans() {
               </ul>
 
               {/* CTA Button */}
-              <Button
-                onClick={handleMonthlyClick}
-                variant="outline"
-                className="w-full h-12 text-base"
-              >
+              <Button onClick={handleMonthlyClick} variant="outline" className="w-full h-12 text-base">
                 <Calendar className="h-5 w-5 mr-2" />
                 Assinar mensal
               </Button>
@@ -147,10 +141,7 @@ export default function Plans() {
               </ul>
 
               {/* CTA Button */}
-              <Button
-                onClick={handleAnnualClick}
-                className="w-full h-12 text-base brand-gradient glow-primary"
-              >
+              <Button onClick={handleAnnualClick} className="w-full h-12 text-base brand-gradient glow-primary">
                 <Crown className="h-5 w-5 mr-2" />
                 Quero o plano anual
                 <Sparkles className="h-4 w-4 ml-2" />
@@ -166,7 +157,7 @@ export default function Plans() {
           {/* Login CTA */}
           <div className="text-center mt-8">
             <p className="text-muted-foreground">
-              Já fez o pagamento?{' '}
+              Já fez o pagamento?{" "}
               <Link to="/entrar" className="text-primary hover:underline">
                 Faça login para liberar seu acesso.
               </Link>

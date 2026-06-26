@@ -1,22 +1,28 @@
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Lock, Crown, Flame, Sparkles, X, Play, Star, ShieldCheck } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Lock, Crown, Flame, Sparkles, X, Play, Star, ShieldCheck } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface ContentAccessPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  type: 'premium' | 'adult' | 'single_content';
+  type: "premium" | "adult" | "single_content";
   adultPurchaseLink?: string;
   purchasedContentTitle?: string;
 }
 
-const ADULT_ACCESS_LINK = 'https://pay.lowify.com.br/checkout?product_id=PfECsZ';
-const VIP_PLAN_LINK = 'https://pay.lowify.com.br/checkout?product_id=Z3NV2k';
+const ADULT_ACCESS_LINK = "https://ggcheckout.app/checkout/v5/g8LEHQoVW7eQKMi2z1rY";
+const VIP_PLAN_LINK = "https://ggcheckout.app/checkout/v5/mQb46CSFk2UVrn1L5lGE";
 
-export function ContentAccessPopup({ open, onOpenChange, type, adultPurchaseLink, purchasedContentTitle }: ContentAccessPopupProps) {
-  const isAdult = type === 'adult';
-  const isSingleContent = type === 'single_content';
+export function ContentAccessPopup({
+  open,
+  onOpenChange,
+  type,
+  adultPurchaseLink,
+  purchasedContentTitle,
+}: ContentAccessPopupProps) {
+  const isAdult = type === "adult";
+  const isSingleContent = type === "single_content";
   const purchaseLink = adultPurchaseLink || ADULT_ACCESS_LINK;
 
   // Single content popup - for users who only purchased a specific title
@@ -27,9 +33,9 @@ export function ContentAccessPopup({ open, onOpenChange, type, adultPurchaseLink
           <div className="relative rounded-2xl overflow-hidden">
             {/* Background gradient - dark blue/teal gradient like reference */}
             <div className="absolute inset-0 bg-gradient-to-b from-[#0a2a3a] via-[#0d3545] to-[#061a24]" />
-            
+
             {/* Close button */}
-            <button 
+            <button
               onClick={() => onOpenChange(false)}
               className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
             >
@@ -49,7 +55,7 @@ export function ContentAccessPopup({ open, onOpenChange, type, adultPurchaseLink
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-amber-400/20 border border-amber-400/50 rounded-full px-4 py-2 mb-6">
                 <Sparkles className="h-4 w-4 text-amber-400" />
                 <span className="text-sm font-semibold text-amber-400">
-                  Seu acesso: {purchasedContentTitle?.toUpperCase() || 'CONTEÚDO AVULSO'}
+                  Seu acesso: {purchasedContentTitle?.toUpperCase() || "CONTEÚDO AVULSO"}
                 </span>
               </div>
 
@@ -60,9 +66,11 @@ export function ContentAccessPopup({ open, onOpenChange, type, adultPurchaseLink
 
               {/* Description */}
               <p className="text-white/70 text-sm mb-4">
-                Todo o resto do catálogo ainda está <span className="text-amber-400 font-semibold">pendente de liberação</span>.
+                Todo o resto do catálogo ainda está{" "}
+                <span className="text-amber-400 font-semibold">pendente de liberação</span>.
                 <br />
-                Desbloqueie tudo e aproveite mais de <span className="text-cyan-400 font-semibold">10.000 títulos</span>!
+                Desbloqueie tudo e aproveite mais de <span className="text-cyan-400 font-semibold">10.000 títulos</span>
+                !
               </p>
 
               {/* Highlight banner */}
@@ -94,7 +102,8 @@ export function ContentAccessPopup({ open, onOpenChange, type, adultPurchaseLink
               {/* Price */}
               <p className="text-white/60 text-sm mb-2">A partir de</p>
               <p className="text-3xl font-bold text-white mb-4">
-                R$<span className="text-cyan-400">10</span> <span className="text-base font-normal text-white/60">/mês</span>
+                R$<span className="text-cyan-400">10</span>{" "}
+                <span className="text-base font-normal text-white/60">/mês</span>
               </p>
 
               {/* CTA Button */}
@@ -132,9 +141,9 @@ export function ContentAccessPopup({ open, onOpenChange, type, adultPurchaseLink
           <div className="relative rounded-2xl overflow-hidden">
             {/* Background gradient */}
             <div className="absolute inset-0 bg-gradient-to-b from-orange-900/90 via-orange-950/95 to-zinc-950" />
-            
+
             {/* Close button */}
-            <button 
+            <button
               onClick={() => onOpenChange(false)}
               className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
             >
@@ -172,12 +181,7 @@ export function ContentAccessPopup({ open, onOpenChange, type, adultPurchaseLink
               {/* CTA Buttons */}
               <div className="space-y-3">
                 {/* Main CTA - Adult Access */}
-                <a
-                  href={purchaseLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block"
-                >
+                <a href={purchaseLink} target="_blank" rel="noopener noreferrer" className="block">
                   <Button className="w-full h-12 text-base font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/30">
                     <Flame className="w-5 h-5 mr-2" />
                     Liberar Acesso +18
@@ -192,14 +196,9 @@ export function ContentAccessPopup({ open, onOpenChange, type, adultPurchaseLink
                 </div>
 
                 {/* VIP Plan Button */}
-                <a
-                  href={VIP_PLAN_LINK}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block"
-                >
-                  <Button 
-                    variant="outline" 
+                <a href={VIP_PLAN_LINK} target="_blank" rel="noopener noreferrer" className="block">
+                  <Button
+                    variant="outline"
                     className="w-full h-12 text-base font-semibold border-2 border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400"
                   >
                     <Crown className="w-5 h-5 mr-2" />
@@ -250,11 +249,7 @@ export function ContentAccessPopup({ open, onOpenChange, type, adultPurchaseLink
 
           {/* Actions */}
           <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="flex-1"
-            >
+            <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
               Cancelar
             </Button>
             <Link to="/planos" className="flex-1">
