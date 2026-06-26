@@ -21,7 +21,7 @@ const annualFeatures = [
 
 export default function Plans() {
   const handleMonthlyClick = () => {
-    window.open("https://ggcheckout.app/checkout/v5/mQb46CSFk2UVrn1L5lGE", "_blank");
+    window.open("https://ggcheckout.app/checkout/v5/7OKYddFAbmOKkwAJAwu5");
   };
 
   const handleAnnualClick = () => {
