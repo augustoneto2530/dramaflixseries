@@ -149,7 +149,7 @@ export default function Plans() {
 
               <p className="text-center text-xs text-muted-foreground mt-3 flex items-center justify-center gap-1">
                 <Lock className="h-3 w-3" />
-                Pagamento 100% seguro via Lowify
+                Pagamento 100% seguro e instantâneo
               </p>
             </div>
           </div>
