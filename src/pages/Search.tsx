@@ -37,7 +37,15 @@ export default function Search() {
         }
 
         if (data) {
-          setResults(data as Content[]);
+          const seenIds = new Set<string>();
+          const seenTitles = new Set<string>();
+          setResults((data as Content[]).filter((c) => {
+            const key = (c.title || '').trim().toLowerCase();
+            if (seenIds.has(c.id) || (key && seenTitles.has(key))) return false;
+            seenIds.add(c.id);
+            if (key) seenTitles.add(key);
+            return true;
+          }));
         }
       } catch (error) {
         console.error('Error:', error);
