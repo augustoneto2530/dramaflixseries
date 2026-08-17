@@ -62,7 +62,17 @@ export default function Category() {
         }
 
         if (data) {
-          setContents(data as Content[]);
+          // Remove duplicados (mesmo id ou mesmo título)
+          const seenIds = new Set<string>();
+          const seenTitles = new Set<string>();
+          const unique = (data as Content[]).filter((c) => {
+            const key = (c.title || '').trim().toLowerCase();
+            if (seenIds.has(c.id) || (key && seenTitles.has(key))) return false;
+            seenIds.add(c.id);
+            if (key) seenTitles.add(key);
+            return true;
+          });
+          setContents(unique);
         }
       } catch (error) {
         console.error('Error:', error);
