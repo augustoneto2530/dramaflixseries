@@ -132,17 +132,30 @@ export default function Index() {
       return 0;
     };
 
-    const sortedTrending = [...adult, ...nonAdultTrending].sort(sortByPriority);
-    const sortedAdult = [...adult].sort(sortByPriority);
+    // Remove duplicados (mesmo id ou mesmo título) de qualquer lista
+    const dedupe = (list: Content[]) => {
+      const seenIds = new Set<string>();
+      const seenTitles = new Set<string>();
+      return list.filter(c => {
+        const key = (c.title || '').trim().toLowerCase();
+        if (seenIds.has(c.id) || (key && seenTitles.has(key))) return false;
+        seenIds.add(c.id);
+        if (key) seenTitles.add(key);
+        return true;
+      });
+    };
+
+    const sortedTrending = dedupe([...adult, ...nonAdultTrending].sort(sortByPriority));
+    const sortedAdult = dedupe([...adult].sort(sortByPriority));
 
     return {
-      heroContents: heroSorted.length > 0 ? heroSorted : featured.slice(0, 4),
+      heroContents: dedupe(heroSorted).length > 0 ? dedupe(heroSorted) : dedupe(featured).slice(0, 4),
       trendingContents: sortedTrending,
-      newContents: allContents.filter(c => c.is_new),
-      doramasContents: allContents.filter(c => c.category === 'doramas'),
-      seriesContents: allContents.filter(c => c.category === 'series'),
-      filmesContents: allContents.filter(c => c.category === 'filmes'),
-      novelasContents: allContents.filter(c => c.category === 'novelas'),
+      newContents: dedupe(allContents.filter(c => c.is_new)),
+      doramasContents: dedupe(allContents.filter(c => c.category === 'doramas')),
+      seriesContents: dedupe(allContents.filter(c => c.category === 'series')),
+      filmesContents: dedupe(allContents.filter(c => c.category === 'filmes')),
+      novelasContents: dedupe(allContents.filter(c => c.category === 'novelas')),
       adultContents: sortedAdult
     };
   }, [allContents]);
