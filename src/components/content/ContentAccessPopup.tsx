@@ -11,7 +11,7 @@ interface ContentAccessPopupProps {
   purchasedContentTitle?: string;
 }
 
-const ADULT_ACCESS_LINK = "https://ggcheckout.app/checkout/v5/g8LEHQoVW7eQKMi2z1rY";
+const ADULT_ACCESS_LINK = "https://ggcheckout.app/checkout/v5/f56n7KAGZUvnzze119V4";
 const VIP_PLAN_LINK = "https://ggcheckout.app/checkout/v5/mQb46CSFk2UVrn1L5lGE";
 
 export function ContentAccessPopup({
