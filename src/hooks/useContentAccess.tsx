@@ -15,19 +15,28 @@ interface PurchasedContent {
 }
 
 export function useContentAccess() {
-  const { user, profile, isAdmin } = useAuth();
+  const { user, profile, isAdmin, isLoading: authLoading } = useAuth();
   const [purchasedContentIds, setPurchasedContentIds] = useState<string[]>([]);
   const [purchasedContents, setPurchasedContents] = useState<PurchasedContent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [purchasesLoading, setPurchasesLoading] = useState(true);
+  const loading = authLoading || purchasesLoading;
 
   useEffect(() => {
+    let cancelled = false;
+    // Sempre volta para "carregando" quando o usuário muda,
+    // evitando avaliar acesso com a lista de compras vazia.
+    setPurchasesLoading(true);
+
     const fetchPurchasedContent = async () => {
+      if (authLoading) return;
+
       if (!user) {
         setPurchasedContentIds([]);
         setPurchasedContents([]);
-        setLoading(false);
+        setPurchasesLoading(false);
         return;
       }
+
 
       try {
         // Fetch purchased content with titles
@@ -35,6 +44,8 @@ export function useContentAccess() {
           .from('user_content_purchases')
           .select('content_id, contents(title)')
           .eq('user_id', user.id);
+
+        if (cancelled) return;
 
         if (error) {
           console.error('Erro ao buscar compras:', error);
@@ -48,12 +59,16 @@ export function useContentAccess() {
       } catch (err) {
         console.error('Erro:', err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setPurchasesLoading(false);
       }
     };
 
     fetchPurchasedContent();
-  }, [user]);
+    return () => {
+      cancelled = true;
+    };
+  }, [user, authLoading]);
+
 
   // Check if user only has single_content access (no subscription)
   const hasSingleContentOnly = useCallback((): boolean => {
