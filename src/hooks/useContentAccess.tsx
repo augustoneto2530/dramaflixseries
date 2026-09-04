@@ -15,19 +15,28 @@ interface PurchasedContent {
 }
 
 export function useContentAccess() {
-  const { user, profile, isAdmin } = useAuth();
+  const { user, profile, isAdmin, isLoading: authLoading } = useAuth();
   const [purchasedContentIds, setPurchasedContentIds] = useState<string[]>([]);
   const [purchasedContents, setPurchasedContents] = useState<PurchasedContent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [purchasesLoading, setPurchasesLoading] = useState(true);
+  const loading = authLoading || purchasesLoading;
 
   useEffect(() => {
+    let cancelled = false;
+    // Sempre volta para "carregando" quando o usuário muda,
+    // evitando avaliar acesso com a lista de compras vazia.
+    setPurchasesLoading(true);
+
     const fetchPurchasedContent = async () => {
+      if (authLoading) return;
+
       if (!user) {
         setPurchasedContentIds([]);
         setPurchasedContents([]);
-        setLoading(false);
+        setPurchasesLoading(false);
         return;
       }
+
 
       try {
         // Fetch purchased content with titles
