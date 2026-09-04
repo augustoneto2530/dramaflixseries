@@ -45,6 +45,8 @@ export function useContentAccess() {
           .select('content_id, contents(title)')
           .eq('user_id', user.id);
 
+        if (cancelled) return;
+
         if (error) {
           console.error('Erro ao buscar compras:', error);
         } else {
@@ -57,12 +59,16 @@ export function useContentAccess() {
       } catch (err) {
         console.error('Erro:', err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setPurchasesLoading(false);
       }
     };
 
     fetchPurchasedContent();
-  }, [user]);
+    return () => {
+      cancelled = true;
+    };
+  }, [user, authLoading]);
+
 
   // Check if user only has single_content access (no subscription)
   const hasSingleContentOnly = useCallback((): boolean => {
