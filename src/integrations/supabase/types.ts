@@ -481,15 +481,6 @@ export type Database = {
           product_name: string
         }[]
       }
-      current_profile_access: {
-        Args: never
-        Returns: {
-          has_adult_access: boolean
-          is_active: boolean
-          is_vip: boolean
-          plan_type: Database["public"]["Enums"]["plan_type"]
-        }[]
-      }
       email_has_profile: { Args: { p_email: string }; Returns: boolean }
       ensure_current_user_profile: {
         Args: { p_full_name?: string }
