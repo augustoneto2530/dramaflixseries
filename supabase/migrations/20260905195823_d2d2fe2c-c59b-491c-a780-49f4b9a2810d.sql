@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_purchase_webhooks_buyer_email ON public.purchase_webhooks USING btree (buyer_email);
