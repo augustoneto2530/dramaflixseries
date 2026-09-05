@@ -84,6 +84,42 @@ Deno.serve(async (req) => {
       userId = existingProfile.user_id;
     } else {
       const tempPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
+      // --- Resolve contas já existentes (auth user pode existir sem perfil) ---
+      const _origCreateUser = supabase.auth.admin.createUser.bind(supabase.auth.admin);
+      const _ensureProfile = async (uid: string, email: string, name?: string) => {
+        await supabase.from('profiles').upsert(
+          { user_id: uid, email, full_name: name || email },
+          { onConflict: 'user_id' }
+        );
+      };
+      // deno-lint-ignore no-explicit-any
+      (supabase.auth.admin as any).createUser = async (attrs: any) => {
+        const _email = String(attrs?.email || '').toLowerCase().trim();
+        const _name = attrs?.user_metadata?.full_name;
+        const { data: existingId } = await supabase.rpc('get_auth_user_id_by_email', { p_email: _email });
+        if (existingId) {
+          console.log('Conta já existente encontrada em auth.users:', existingId);
+          await _ensureProfile(existingId as string, _email, _name);
+          return { data: { user: { id: existingId, email: _email } }, error: null };
+        }
+        const res = await _origCreateUser(attrs);
+        if (res.error) {
+          const { data: fallbackId } = await supabase.rpc('get_auth_user_id_by_email', { p_email: _email });
+          if (fallbackId) {
+            console.log('createUser falhou, usando conta existente:', fallbackId);
+            await _ensureProfile(fallbackId as string, _email, _name);
+            return { data: { user: { id: fallbackId, email: _email } }, error: null };
+          }
+          return res;
+        }
+        if (res.data?.user?.id) {
+          await new Promise((r) => setTimeout(r, 500));
+          await _ensureProfile(res.data.user.id, _email, _name);
+        }
+        return res;
+      };
+      // --- fim ---
+
       const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
         email: emailNormalized,
         password: tempPassword,
@@ -91,41 +127,6 @@ Deno.serve(async (req) => {
         user_metadata: { full_name: buyerName },
       });
 
-    // --- Resolve contas já existentes (auth user pode existir sem perfil) ---
-    const _origCreateUser = supabase.auth.admin.createUser.bind(supabase.auth.admin);
-    const _ensureProfile = async (uid: string, email: string, name?: string) => {
-      await supabase.from('profiles').upsert(
-        { user_id: uid, email, full_name: name || email },
-        { onConflict: 'user_id' }
-      );
-    };
-    // deno-lint-ignore no-explicit-any
-    (supabase.auth.admin as any).createUser = async (attrs: any) => {
-      const _email = String(attrs?.email || '').toLowerCase().trim();
-      const _name = attrs?.user_metadata?.full_name;
-      const { data: existingId } = await supabase.rpc('get_auth_user_id_by_email', { p_email: _email });
-      if (existingId) {
-        console.log('Conta já existente encontrada em auth.users:', existingId);
-        await _ensureProfile(existingId as string, _email, _name);
-        return { data: { user: { id: existingId, email: _email } }, error: null };
-      }
-      const res = await _origCreateUser(attrs);
-      if (res.error) {
-        const { data: fallbackId } = await supabase.rpc('get_auth_user_id_by_email', { p_email: _email });
-        if (fallbackId) {
-          console.log('createUser falhou, usando conta existente:', fallbackId);
-          await _ensureProfile(fallbackId as string, _email, _name);
-          return { data: { user: { id: fallbackId, email: _email } }, error: null };
-        }
-        return res;
-      }
-      if (res.data?.user?.id) {
-        await new Promise((r) => setTimeout(r, 500));
-        await _ensureProfile(res.data.user.id, _email, _name);
-      }
-      return res;
-    };
-    // --- fim ---
 
       if (createError) {
         console.error('Erro ao criar usuário:', createError);
