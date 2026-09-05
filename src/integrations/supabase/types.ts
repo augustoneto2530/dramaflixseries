@@ -468,6 +468,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_content: {
+        Args: { _content_id: string; _is_adult: boolean }
+        Returns: boolean
+      }
+      can_access_episodes: { Args: { _content_id: string }; Returns: boolean }
       check_email_purchase_info: {
         Args: { p_email: string }
         Returns: {
