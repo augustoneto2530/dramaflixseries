@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Content } from '@/lib/types';
@@ -16,58 +17,36 @@ interface PurchasedContent {
 
 export function useContentAccess() {
   const { user, profile, isAdmin, isLoading: authLoading } = useAuth();
-  const [purchasedContentIds, setPurchasedContentIds] = useState<string[]>([]);
-  const [purchasedContents, setPurchasedContents] = useState<PurchasedContent[]>([]);
-  const [purchasesLoading, setPurchasesLoading] = useState(true);
-  const loading = authLoading || purchasesLoading;
 
-  useEffect(() => {
-    let cancelled = false;
-    // Sempre volta para "carregando" quando o usuário muda,
-    // evitando avaliar acesso com a lista de compras vazia.
-    setPurchasesLoading(true);
+  // Compras em cache: evita repetir a mesma consulta em cada card/página
+  const { data: purchasedContents = [], isLoading: purchasesQueryLoading } = useQuery({
+    queryKey: ['user-purchases', user?.id],
+    enabled: !!user && !authLoading,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1,
+    queryFn: async (): Promise<PurchasedContent[]> => {
+      const { data, error } = await supabase
+        .from('user_content_purchases')
+        .select('content_id, contents(title)')
+        .eq('user_id', user!.id);
+      if (error) throw error;
+      return (data || []).map((p: any) => ({
+        content_id: p.content_id,
+        title: p.contents?.title || 'Conteúdo Avulso',
+      }));
+    },
+  });
 
-    const fetchPurchasedContent = async () => {
-      if (authLoading) return;
+  const purchasedContentIds = useMemo(
+    () => purchasedContents.map((p) => p.content_id),
+    [purchasedContents]
+  );
 
-      if (!user) {
-        setPurchasedContentIds([]);
-        setPurchasedContents([]);
-        setPurchasesLoading(false);
-        return;
-      }
+  const loading = authLoading || (!!user && purchasesQueryLoading);
 
-
-      try {
-        // Fetch purchased content with titles
-        const { data, error } = await supabase
-          .from('user_content_purchases')
-          .select('content_id, contents(title)')
-          .eq('user_id', user.id);
-
-        if (cancelled) return;
-
-        if (error) {
-          console.error('Erro ao buscar compras:', error);
-        } else {
-          setPurchasedContentIds(data?.map(p => p.content_id) || []);
-          setPurchasedContents(data?.map(p => ({
-            content_id: p.content_id,
-            title: (p.contents as any)?.title || 'Conteúdo Avulso'
-          })) || []);
-        }
-      } catch (err) {
-        console.error('Erro:', err);
-      } finally {
-        if (!cancelled) setPurchasesLoading(false);
-      }
-    };
-
-    fetchPurchasedContent();
-    return () => {
-      cancelled = true;
-    };
-  }, [user, authLoading]);
 
 
   // Check if user only has single_content access (no subscription)
