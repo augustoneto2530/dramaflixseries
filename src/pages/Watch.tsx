@@ -61,8 +61,8 @@ export default function Watch() {
   const saveWatchProgress = useCallback(async (seconds: number, completed: boolean = false) => {
     if (!user || !currentEpisode) return;
     
-    // Only save if progress changed by at least 5 seconds or completed
-    if (!completed && Math.abs(seconds - lastSavedProgressRef.current) < 5) return;
+    // Só grava se avançou pelo menos 25 segundos (ou terminou) — reduz carga no banco
+    if (!completed && Math.abs(seconds - lastSavedProgressRef.current) < 25) return;
     
     try {
       const { error } = await supabase
@@ -120,7 +120,7 @@ export default function Watch() {
         if (videoRef.current) {
           saveWatchProgress(videoRef.current.currentTime);
         }
-      }, 15000);
+      }, 60000);
     }
 
     return () => {
