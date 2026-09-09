@@ -382,7 +382,7 @@ export default function ContentDetails() {
         open={showAccessPopup}
         onOpenChange={setShowAccessPopup}
         type={blockedReason || "premium"}
-        adultPurchaseLink="https://ggcheckout.app/checkout/v5/g8LEHQoVW7eQKMi2z1rY"
+        adultPurchaseLink="https://ggcheckout.app/checkout/v5/f56n7KAGZUvnzze119V4"
       />
     </Layout>
   );
