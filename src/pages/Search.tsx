@@ -37,7 +37,7 @@ export default function Search() {
   const clearSearch = () => {
     setSearchTerm('');
     setSearchParams({});
-    setResults([]);
+    
   };
 
   return (
