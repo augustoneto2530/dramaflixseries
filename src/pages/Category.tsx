@@ -36,53 +36,18 @@ const categoryConfig: Record<string, { title: string; icon: React.ReactNode; des
 
 export default function Category() {
   const { category } = useParams<{ category: string }>();
-  const [contents, setContents] = useState<Content[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: allContents = [], isLoading: loading } = useContentsQuery();
 
   const config = category ? categoryConfig[category] : null;
 
-  useEffect(() => {
-    const fetchContents = async () => {
-      if (!category) return;
+  const contents: Content[] = useMemo(() => {
+    if (!category) return [];
+    const filtered = allContents.filter((c) =>
+      category === 'adult' ? c.category === 'adult' || c.is_adult : c.category === category
+    );
+    return dedupeContents(filtered);
+  }, [allContents, category]);
 
-      try {
-        setLoading(true);
-        const query = supabase
-          .from('contents')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        const { data, error } = category === 'adult'
-          ? await query.or('category.eq.adult,is_adult.eq.true')
-          : await query.eq('category', category as ContentCategory);
-
-        if (error) {
-          console.error('Error fetching contents:', error);
-          return;
-        }
-
-        if (data) {
-          // Remove duplicados (mesmo id ou mesmo título)
-          const seenIds = new Set<string>();
-          const seenTitles = new Set<string>();
-          const unique = (data as Content[]).filter((c) => {
-            const key = (c.title || '').trim().toLowerCase();
-            if (seenIds.has(c.id) || (key && seenTitles.has(key))) return false;
-            seenIds.add(c.id);
-            if (key) seenTitles.add(key);
-            return true;
-          });
-          setContents(unique);
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchContents();
-  }, [category]);
 
   if (!config) {
     return (
