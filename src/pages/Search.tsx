@@ -13,49 +13,19 @@ export default function Search() {
   const query = searchParams.get('q') || '';
   
   const [searchTerm, setSearchTerm] = useState(query);
-  const [results, setResults] = useState<Content[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { data: allContents = [], isLoading: loading } = useContentsQuery();
 
-  useEffect(() => {
-    const searchContents = async () => {
-      if (!query.trim()) {
-        setResults([]);
-        return;
-      }
+  const results: Content[] = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const matched = allContents.filter(
+      (c) =>
+        (c.title || '').toLowerCase().includes(q) ||
+        (c.description || '').toLowerCase().includes(q)
+    );
+    return dedupeContents(matched);
+  }, [allContents, query]);
 
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('contents')
-          .select('*')
-          .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error('Error searching contents:', error);
-          return;
-        }
-
-        if (data) {
-          const seenIds = new Set<string>();
-          const seenTitles = new Set<string>();
-          setResults((data as Content[]).filter((c) => {
-            const key = (c.title || '').trim().toLowerCase();
-            if (seenIds.has(c.id) || (key && seenTitles.has(key))) return false;
-            seenIds.add(c.id);
-            if (key) seenTitles.add(key);
-            return true;
-          }));
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    searchContents();
-  }, [query]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
