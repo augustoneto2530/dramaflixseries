@@ -1,76 +1,31 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Layout } from '@/components/layout/Layout';
 import { HeroSlider } from '@/components/content/HeroSlider';
 import { ContentCarousel } from '@/components/content/ContentCarousel';
 import { Content } from '@/lib/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useContentsQuery } from '@/hooks/useContentsQuery';
 
 export default function Index() {
   const { user } = useAuth();
-  const [allContents, setAllContents] = useState<Content[]>([]);
-  const [purchasedContents, setPurchasedContents] = useState<Content[]>([]);
-  const [loadingContents, setLoadingContents] = useState(true);
-  const [loadingPurchases, setLoadingPurchases] = useState(false);
+  const { data: allContents = [], isLoading: loadingContents } = useContentsQuery();
 
-  // Fetch all contents immediately (no dependency on user)
-  useEffect(() => {
-    const fetchContents = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('contents')
-          .select('*')
-          .order('created_at', { ascending: false });
+  const { data: purchasedContents = [] } = useQuery({
+    queryKey: ['purchased-contents', user?.id],
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_content_purchases')
+        .select('content_id, contents(*)')
+        .eq('user_id', user!.id);
+      if (error) throw error;
+      return (data || []).map((p: any) => p.contents).filter(Boolean) as Content[];
+    },
+  });
 
-        if (error) {
-          console.error('Error fetching contents:', error);
-        } else if (data) {
-          setAllContents(data as Content[]);
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setLoadingContents(false);
-      }
-    };
-
-    fetchContents();
-  }, []);
-
-  // Fetch purchased contents immediately when user is available (separate effect)
-  useEffect(() => {
-    if (!user) {
-      setPurchasedContents([]);
-      return;
-    }
-
-    const fetchPurchases = async () => {
-      setLoadingPurchases(true);
-      try {
-        const { data, error } = await supabase
-          .from('user_content_purchases')
-          .select('content_id, contents(*)')
-          .eq('user_id', user.id);
-
-        if (error) {
-          console.error('Error fetching purchases:', error);
-        } else if (data && data.length > 0) {
-          const purchased = data
-            .map((p: any) => p.contents)
-            .filter(Boolean) as Content[];
-          setPurchasedContents(purchased);
-        } else {
-          setPurchasedContents([]);
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setLoadingPurchases(false);
-      }
-    };
-
-    fetchPurchases();
-  }, [user]);
 
   // Memoize filtered contents for performance
   const { heroContents, trendingContents, newContents, doramasContents, seriesContents, filmesContents, novelasContents, adultContents } = useMemo(() => {
