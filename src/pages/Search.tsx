@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { ContentCard } from '@/components/content/ContentCard';
 import { Content } from '@/lib/types';
-import { supabase } from '@/integrations/supabase/client';
+import { useContentsQuery, dedupeContents } from '@/hooks/useContentsQuery';
 import { Search as SearchIcon, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';

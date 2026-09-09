@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { ContentCard } from '@/components/content/ContentCard';
-import { Content, ContentCategory } from '@/lib/types';
-import { supabase } from '@/integrations/supabase/client';
+import { Content } from '@/lib/types';
+import { useContentsQuery, dedupeContents } from '@/hooks/useContentsQuery';
 import { Flame, Heart, Film, Tv, Sparkles } from 'lucide-react';
 
 const categoryConfig: Record<string, { title: string; icon: React.ReactNode; description: string }> = {
