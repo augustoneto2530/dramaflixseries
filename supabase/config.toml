@@ -29,3 +29,15 @@ verify_jwt = false
 
 [functions.webhook-a-confissao]
 verify_jwt = false
+
+[functions.webhook-craque-de-bola]
+verify_jwt = false
+
+[functions.webhook-filho-do-meu-chefe]
+verify_jwt = false
+
+[functions.webhook-filho-marido-pecado]
+verify_jwt = false
+
+[functions.webhook-noiva-pelo-destino]
+verify_jwt = false

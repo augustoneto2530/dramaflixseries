@@ -7,11 +7,12 @@ const corsHeaders = {
 
 const NOIVA_PELO_DESTINO_CONTENT_ID = '25eafdb4-c6ac-4407-9fda-d9d0a5dcd1c7';
 const NOIVA_PELO_DESTINO_TITLE = 'NOIVA PELO DESTINO';
+const NOIVA_PRODUCT_IDS = new Set(['oaf4ew8ZvBEFhCd6nBNi', '46545', '46759']);
 
 const normalizeEmail = (email: unknown) => String(email || '').toLowerCase().trim();
 
 const isApprovedPayment = (status: unknown) => {
-  const normalized = String(status || 'approved').toLowerCase().trim();
+  const normalized = String(status || '').toLowerCase().trim();
   return ['approved', 'paid', 'completed', 'complete', 'aprovado', 'pago', 'concluido', 'concluído'].includes(normalized);
 };
 
@@ -65,14 +66,14 @@ Deno.serve(async (req) => {
       payload.buyer_document ||
       null;
 
-    const amount = payload.purchase?.value ||
+    const amount = payload.payment?.amount || payload.purchase?.value ||
       payload.amount ||
       payload.value ||
       payload.data?.purchase?.value ||
       payload.transaction?.amount ||
       0;
 
-    const transactionId = payload.purchase?.transaction ||
+    const transactionId = payload.payment?.id || payload.purchase?.transaction ||
       payload.transaction_id ||
       payload.transaction?.id ||
       payload.data?.purchase?.transaction ||
@@ -87,12 +88,12 @@ Deno.serve(async (req) => {
       payload.payment?.method ||
       'unknown';
 
-    const paymentStatus = payload.purchase?.status ||
+    const paymentStatus = payload.payment?.status || payload.purchase?.status ||
       payload.payment_status ||
       payload.status ||
       payload.data?.purchase?.status ||
-      payload.payment?.status ||
-      'approved';
+      '';
+    const checkoutProductId = payload.product?.id || payload.products?.[0]?.id || payload.product_id || payload.data?.product?.id || '';
 
     if (!buyerEmail) {
       return new Response(
@@ -101,9 +102,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!isApprovedPayment(paymentStatus)) {
+    if (!isApprovedPayment(paymentStatus) || !NOIVA_PRODUCT_IDS.has(String(checkoutProductId))) {
       return new Response(
-        JSON.stringify({ success: true, ignored: true, reason: 'Pagamento ainda não aprovado' }),
+        JSON.stringify({ success: true, ignored: true, reason: 'Pagamento não aprovado ou produto incorreto' }),
         { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -153,7 +154,7 @@ Deno.serve(async (req) => {
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('user_id')
-      .eq('email', buyerEmail)
+      .ilike('email', buyerEmail)
       .maybeSingle();
 
     let userId = existingProfile?.user_id;

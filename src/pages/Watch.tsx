@@ -18,6 +18,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { isPlayableVideoUrl } from '@/lib/media';
 
 interface Episode {
   id: string;
@@ -49,13 +50,14 @@ export default function Watch() {
   const [currentEpisode, setCurrentEpisode] = useState<Episode | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [showControls, setShowControls] = useState(true);
   const [showEpisodes, setShowEpisodes] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(true);
 
   // Save watch progress to database
   const saveWatchProgress = useCallback(async (seconds: number, completed: boolean = false) => {
@@ -98,7 +100,7 @@ export default function Watch() {
         .select('progress_seconds, completed')
         .eq('user_id', user.id)
         .eq('episode_id', currentEpisode.id)
-        .single();
+        .maybeSingle();
 
       if (!error && data && !data.completed && data.progress_seconds > 10) {
         // Resume from saved position (minus 5 seconds for context)
@@ -173,12 +175,13 @@ export default function Watch() {
       try {
         setLoading(true);
         
-        // Fetch content
-        const { data: contentData, error: contentError } = await supabase
-          .from('contents')
-          .select('*')
-          .eq('id', id)
-          .single();
+        // Content metadata and episodes are independent, so load both together.
+        const [contentResult, episodesResult] = await Promise.all([
+          supabase.from('contents').select('*').eq('id', id).single(),
+          supabase.from('episodes').select('*').eq('content_id', id).order('episode_number', { ascending: true }),
+        ]);
+
+        const { data: contentData, error: contentError } = contentResult;
 
         if (contentError) {
           console.error('Error fetching content:', contentError);
@@ -200,25 +203,22 @@ export default function Watch() {
           setHasAccess(true);
         }
 
-        // Fetch episodes
-        const { data: episodesData, error: episodesError } = await supabase
-          .from('episodes')
-          .select('*')
-          .eq('content_id', id)
-          .order('episode_number', { ascending: true });
+        const { data: episodesData, error: episodesError } = episodesResult;
 
-        if (!episodesError && episodesData && episodesData.length > 0) {
-          setEpisodes(episodesData);
+        const playableEpisodes = (episodesData || []).filter((episode) => isPlayableVideoUrl(episode.video_url));
+
+        if (!episodesError && playableEpisodes.length > 0) {
+          setEpisodes(playableEpisodes);
           
           // Find current episode
           if (episodeId) {
-            const episode = episodesData.find(ep => ep.id === episodeId);
-            setCurrentEpisode(episode || episodesData[0]);
+            const episode = playableEpisodes.find(ep => ep.id === episodeId);
+            setCurrentEpisode(episode || playableEpisodes[0]);
           } else {
-            setCurrentEpisode(episodesData[0]);
+            setCurrentEpisode(playableEpisodes[0]);
           }
-        } else if (!episodesError && (!episodesData || episodesData.length === 0)) {
-          toast.error('Nenhum episódio disponível');
+        } else if (!episodesError) {
+          toast.error('Nenhum vídeo válido disponível para este conteúdo');
           navigate(`/conteudo/${id}`);
         }
       } catch (error) {
@@ -286,14 +286,18 @@ export default function Watch() {
     }
   };
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play();
+        try {
+          await videoRef.current.play();
+        } catch (error) {
+          console.error('Unable to start video playback:', error);
+          toast.error('Não foi possível iniciar o vídeo. Toque novamente para tentar.');
+        }
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
@@ -388,24 +392,39 @@ export default function Watch() {
     >
       {/* Video Player */}
       <video
+        key={currentEpisode.id}
         ref={videoRef}
         src={currentEpisode.video_url}
         className="w-full h-full max-h-screen object-contain"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
-        onPlay={() => setIsPlaying(true)}
+        onLoadStart={() => setIsBuffering(true)}
+        onWaiting={() => setIsBuffering(true)}
+        onCanPlay={() => setIsBuffering(false)}
+        onPlaying={() => {
+          setIsPlaying(true);
+          setIsBuffering(false);
+        }}
         onPause={handleVideoPause}
         onEnded={handleVideoEnded}
         onClick={togglePlay}
         onError={(e) => {
-          console.error('Video error:', e);
+          const mediaError = e.currentTarget.error;
+          console.error('Video error:', mediaError?.code, mediaError?.message);
+          setIsBuffering(false);
           toast.error('Erro ao carregar vídeo. Verifique sua conexão e tente novamente.');
         }}
         playsInline
-        preload="metadata"
-        
+        muted={isMuted}
+        preload="auto"
         autoPlay
       />
+
+      {isBuffering && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" aria-live="polite">
+          <div className="h-12 w-12 animate-spin rounded-full border-2 border-muted border-t-primary" />
+        </div>
+      )}
 
       {/* Controls Overlay */}
       <div 

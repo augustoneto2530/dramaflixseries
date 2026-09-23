@@ -5,6 +5,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const ANNUAL_PRODUCT_IDS = new Set(['hC8p7LrFbb9yCRdIVLnS']);
+const isApprovedPayment = (status: unknown) =>
+  ['approved', 'paid', 'completed', 'complete', 'aprovado', 'pago', 'concluido', 'concluído']
+    .includes(String(status || '').toLowerCase().trim());
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -52,23 +57,24 @@ Deno.serve(async (req) => {
                           payload.document;
 
     // Extract transaction details
-    const transactionId = payload.transaction?.id || 
+    const transactionId = payload.payment?.id || payload.transaction?.id || 
                           payload.purchase?.transaction ||
                           payload.data?.transaction?.id ||
                           payload.transaction_id ||
                           payload.id;
 
-    const amount = payload.purchase?.price?.value || 
+    const amount = payload.payment?.amount || payload.purchase?.price?.value || 
                    payload.transaction?.amount ||
                    payload.data?.purchase?.price?.value ||
                    payload.amount ||
                    payload.value;
 
-    const paymentStatus = payload.purchase?.status || 
+    const paymentStatus = payload.payment?.status || payload.purchase?.status || 
                           payload.transaction?.status ||
                           payload.data?.purchase?.status ||
                           payload.status ||
-                          'approved';
+                          '';
+    const productId = payload.product?.id || payload.products?.[0]?.id || payload.product_id || payload.data?.product?.id || '';
 
     if (!buyerEmail) {
       console.error('Email do comprador não encontrado no payload');
@@ -76,6 +82,12 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Email do comprador é obrigatório' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    if (!isApprovedPayment(paymentStatus) || !ANNUAL_PRODUCT_IDS.has(String(productId))) {
+      return new Response(JSON.stringify({ success: true, ignored: true, reason: 'Pagamento não aprovado ou produto incorreto' }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     console.log('Dados extraídos:', { buyerEmail, buyerName, buyerPhone, transactionId, amount, paymentStatus });

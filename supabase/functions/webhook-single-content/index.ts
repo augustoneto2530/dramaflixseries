@@ -84,23 +84,28 @@ serve(async (req) => {
                           rawData.customer?.document ||
                           null;
 
-    const amount = rawData.amount || 
+    const amount = rawData.payment?.amount || rawData.amount || 
                    rawData.value ||
                    rawData.purchase?.value ||
                    rawData.data?.purchase?.value ||
                    null;
 
-    const transactionId = rawData.transaction_id ||
+    const transactionId = rawData.payment?.id || rawData.transaction_id ||
                           rawData.transaction ||
                           rawData.purchase_id ||
                           rawData.order_id ||
                           rawData.data?.purchase?.transaction ||
                           null;
 
-    const paymentStatus = rawData.payment_status ||
+    const paymentStatus = rawData.payment?.status || rawData.payment_status ||
                           rawData.status ||
-                          rawData.payment?.status ||
-                          'approved';
+                          '';
+    const approvedStatuses = ['approved', 'paid', 'completed', 'complete', 'aprovado', 'pago', 'concluido', 'concluído'];
+    if (!approvedStatuses.includes(String(paymentStatus).toLowerCase().trim())) {
+      return new Response(JSON.stringify({ success: true, ignored: true, reason: 'Pagamento ainda não aprovado' }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     // Save webhook data
     const { data: webhookData, error: webhookError } = await supabase
@@ -137,8 +142,8 @@ serve(async (req) => {
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('*')
-      .eq('email', buyerEmail.toLowerCase().trim())
-      .single();
+      .ilike('email', buyerEmail.toLowerCase().trim())
+      .maybeSingle();
 
     let userId: string;
 

@@ -9,6 +9,9 @@ const corsHeaders = {
 const CONFISSAO_PARTE1_CONTENT_ID = '0e8f3de8-5fdf-48f7-a6ab-f7004e3491ed';
 const CONFISSAO_CONTENT_ID = '9b7072cf-c7d4-4b38-a8a0-bc02d1ad88ed';
 const LIGADA_A_HONRA_CONTENT_ID = '840dbec5-3144-4069-80a8-8413bf3497a9';
+const isApprovedPayment = (status: unknown) =>
+  ['approved', 'paid', 'completed', 'complete', 'aprovado', 'pago', 'concluido', 'concluído']
+    .includes(String(status || '').toLowerCase().trim());
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -53,14 +56,14 @@ Deno.serve(async (req) => {
       payload.data?.buyer?.document ||
       payload.buyer_document;
 
-    const amount = payload.purchase?.value ||
+    const amount = payload.payment?.amount || payload.purchase?.value ||
       payload.amount ||
       payload.value ||
       payload.data?.purchase?.value ||
       payload.transaction?.amount ||
       0;
 
-    const transactionId = payload.purchase?.transaction ||
+    const transactionId = payload.payment?.id || payload.purchase?.transaction ||
       payload.transaction_id ||
       payload.transaction?.id ||
       payload.data?.purchase?.transaction ||
@@ -72,10 +75,10 @@ Deno.serve(async (req) => {
       payload.data?.purchase?.payment_method ||
       'unknown';
 
-    const paymentStatus = payload.purchase?.status ||
+    const paymentStatus = payload.payment?.status || payload.purchase?.status ||
       payload.status ||
       payload.data?.purchase?.status ||
-      'approved';
+      '';
 
     if (!buyerEmail) {
       console.error('Email do comprador não encontrado no payload');
@@ -83,6 +86,12 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Email do comprador é obrigatório' }),
         { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
+    }
+
+    if (!isApprovedPayment(paymentStatus)) {
+      return new Response(JSON.stringify({ success: true, ignored: true, reason: 'Pagamento ainda não aprovado' }), {
+        status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
     }
 
     const normalizedEmail = buyerEmail.toLowerCase().trim();
@@ -120,8 +129,8 @@ Deno.serve(async (req) => {
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('user_id, full_name')
-      .eq('email', normalizedEmail)
-      .single();
+      .ilike('email', normalizedEmail)
+      .maybeSingle();
 
     let userId: string;
 

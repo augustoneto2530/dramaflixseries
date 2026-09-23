@@ -2,6 +2,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Lock, Crown, Flame, Sparkles, X, Play, Star, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
+import { CHECKOUT_LINKS } from "@/lib/checkoutLinks";
 
 interface ContentAccessPopupProps {
   open: boolean;
@@ -10,9 +11,6 @@ interface ContentAccessPopupProps {
   adultPurchaseLink?: string;
   purchasedContentTitle?: string;
 }
-
-const ADULT_ACCESS_LINK = "https://ggcheckout.app/checkout/v5/f56n7KAGZUvnzze119V4";
-const VIP_PLAN_LINK = "https://ggcheckout.app/checkout/v5/mQb46CSFk2UVrn1L5lGE";
 
 export function ContentAccessPopup({
   open,
@@ -23,7 +21,7 @@ export function ContentAccessPopup({
 }: ContentAccessPopupProps) {
   const isAdult = type === "adult";
   const isSingleContent = type === "single_content";
-  const purchaseLink = adultPurchaseLink || ADULT_ACCESS_LINK;
+  const purchaseLink = adultPurchaseLink || CHECKOUT_LINKS.adultPopup;
 
   // Single content popup - for users who only purchased a specific title
   if (isSingleContent) {
@@ -196,7 +194,7 @@ export function ContentAccessPopup({
                 </div>
 
                 {/* VIP Plan Button */}
-                <a href={VIP_PLAN_LINK} target="_blank" rel="noopener noreferrer" className="block">
+                <a href={CHECKOUT_LINKS.annualVip} target="_blank" rel="noopener noreferrer" className="block">
                   <Button
                     variant="outline"
                     className="w-full h-12 text-base font-semibold border-2 border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400"

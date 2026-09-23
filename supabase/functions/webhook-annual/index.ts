@@ -5,6 +5,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const ANNUAL_PRODUCT_IDS = new Set(['hC8p7LrFbb9yCRdIVLnS']);
+const isApprovedPayment = (status: unknown) =>
+  ['approved', 'paid', 'completed', 'complete', 'aprovado', 'pago', 'concluido', 'concluído']
+    .includes(String(status || '').toLowerCase().trim());
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -25,12 +30,12 @@ Deno.serve(async (req) => {
     const buyerName = rawData.name || rawData.buyer_name || rawData.customer?.name || rawData.data?.buyer?.name || rawData.data?.customer?.name || '';
     const buyerPhone = rawData.phone || rawData.buyer_phone || rawData.customer?.phone || rawData.data?.buyer?.phone || rawData.data?.customer?.phone || '';
     const buyerDocument = rawData.document || rawData.cpf || rawData.buyer_document || rawData.customer?.document || rawData.data?.buyer?.doc || '';
-    const productId = rawData.product_id || rawData.productId || rawData.data?.product?.id || rawData.offer_code || '';
-    const productName = rawData.product_name || rawData.productName || rawData.data?.product?.name || rawData.offer_name || '';
-    const transactionId = rawData.transaction_id || rawData.transactionId || rawData.sale_id || rawData.data?.sale?.id || rawData.id || '';
-    const paymentMethod = rawData.payment_method || rawData.paymentMethod || rawData.data?.payment?.type || '';
-    const paymentStatus = rawData.status || rawData.payment_status || rawData.data?.status || 'approved';
-    const amount = parseFloat(rawData.amount || rawData.price || rawData.data?.sale?.total || rawData.data?.payment?.value || 0);
+    const productId = rawData.product?.id || rawData.products?.[0]?.id || rawData.product_id || rawData.productId || rawData.data?.product?.id || rawData.offer_code || '';
+    const productName = rawData.product?.title || rawData.product?.name || rawData.products?.[0]?.title || rawData.product_name || rawData.productName || rawData.data?.product?.name || rawData.offer_name || '';
+    const transactionId = rawData.payment?.id || rawData.transaction_id || rawData.transactionId || rawData.sale_id || rawData.data?.sale?.id || rawData.id || '';
+    const paymentMethod = rawData.payment?.paymentMethod || rawData.payment?.method || rawData.payment_method || rawData.paymentMethod || rawData.data?.payment?.type || '';
+    const paymentStatus = rawData.payment?.status || rawData.status || rawData.payment_status || rawData.data?.status || '';
+    const amount = parseFloat(rawData.payment?.amount || rawData.amount || rawData.price || rawData.data?.sale?.total || rawData.data?.payment?.value || 0);
     const currency = rawData.currency || 'BRL';
 
     if (!buyerEmail) {
@@ -38,6 +43,13 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ success: false, error: 'Email do comprador é obrigatório' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!isApprovedPayment(paymentStatus) || !ANNUAL_PRODUCT_IDS.has(String(productId))) {
+      return new Response(
+        JSON.stringify({ success: true, ignored: true, reason: 'Pagamento não aprovado ou produto não corresponde ao plano anual' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

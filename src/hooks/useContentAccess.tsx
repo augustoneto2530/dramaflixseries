@@ -22,9 +22,9 @@ export function useContentAccess() {
   const { data: purchasedContents = [], isLoading: purchasesQueryLoading } = useQuery({
     queryKey: ['user-purchases', user?.id],
     enabled: !!user && !authLoading,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
     gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: 'always',
     refetchOnMount: false,
     retry: 1,
     queryFn: async (): Promise<PurchasedContent[]> => {
@@ -47,6 +47,20 @@ export function useContentAccess() {
 
   const loading = authLoading || (!!user && purchasesQueryLoading);
 
+  const isFutureOrUnlimited = useCallback((endDate: string | null): boolean => {
+    return !endDate || new Date(endDate).getTime() > Date.now();
+  }, []);
+
+  const hasValidSubscription = useMemo(
+    () => !!profile && profile.subscription_status === 'active' && isFutureOrUnlimited(profile.subscription_end_date),
+    [profile, isFutureOrUnlimited]
+  );
+
+  const hasValidAdultAccess = useMemo(
+    () => !!profile?.has_adult_access && isFutureOrUnlimited(profile.adult_access_end_date),
+    [profile, isFutureOrUnlimited]
+  );
+
 
 
   // Check if user only has single_content access (no subscription)
@@ -54,11 +68,11 @@ export function useContentAccess() {
     if (!profile) return false;
     
     // User has no active subscription but has purchased content
-    const noActiveSubscription = !profile.is_vip && 
-      (profile.subscription_status !== 'active' || !profile.plan_type);
+    const noActiveSubscription = !(profile.is_vip && isFutureOrUnlimited(profile.subscription_end_date)) &&
+      (!hasValidSubscription || !profile.plan_type);
     
     return noActiveSubscription && purchasedContentIds.length > 0;
-  }, [profile, purchasedContentIds]);
+  }, [profile, purchasedContentIds, hasValidSubscription, isFutureOrUnlimited]);
 
   // Get the first purchased content title for display
   const getPurchasedContentTitle = useCallback((): string | undefined => {
@@ -96,21 +110,26 @@ export function useContentAccess() {
     }
 
     // VIP has full access
-    if (profile.is_vip) {
+    if (profile.is_vip && isFutureOrUnlimited(profile.subscription_end_date)) {
       return { hasAccess: true, accessType: 'full', purchasedContentIds };
     }
 
     // Annual subscription has full access
-    if (profile.subscription_status === 'active' && profile.plan_type === 'annual') {
+    if (hasValidSubscription && profile.plan_type === 'annual') {
       return { hasAccess: true, accessType: 'full', purchasedContentIds };
     }
 
+    // Standalone +18 access also applies when the customer has no monthly plan.
+    if (content.is_adult && hasValidAdultAccess) {
+      return { hasAccess: true, accessType: 'adult_only', purchasedContentIds };
+    }
+
     // Monthly subscription
-    if (profile.subscription_status === 'active' && profile.plan_type === 'monthly') {
+    if (hasValidSubscription && profile.plan_type === 'monthly') {
       // Check for adult content - Monthly users NEVER have access to adult content without paying extra
       if (content.is_adult) {
         // Monthly user needs explicit adult access
-        if (profile.has_adult_access) {
+        if (hasValidAdultAccess) {
           return { hasAccess: true, accessType: 'adult_only', purchasedContentIds };
         }
         // Block access for monthly users without adult access
@@ -120,9 +139,8 @@ export function useContentAccess() {
       return { hasAccess: true, accessType: 'full', purchasedContentIds };
     }
 
-    // No access
     return { hasAccess: false, accessType: 'none', purchasedContentIds };
-  }, [user, profile, isAdmin, purchasedContentIds]);
+  }, [user, profile, isAdmin, purchasedContentIds, hasValidSubscription, hasValidAdultAccess, isFutureOrUnlimited]);
 
   const getBlockedReason = useCallback((content: Content): 'premium' | 'adult' | 'single_content' | null => {
     const accessResult = checkContentAccess(content);
