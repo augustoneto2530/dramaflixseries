@@ -152,7 +152,7 @@ Deno.serve(async (req) => {
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('user_id')
-      .eq('email', buyerEmail)
+      .ilike('email', buyerEmail)
       .maybeSingle();
 
     let userId = existingProfile?.user_id;

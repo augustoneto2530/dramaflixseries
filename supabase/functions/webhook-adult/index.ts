@@ -136,8 +136,8 @@ serve(async (req) => {
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('*')
-      .eq('email', buyerEmail.toLowerCase().trim())
-      .single();
+      .ilike('email', buyerEmail.toLowerCase().trim())
+      .maybeSingle();
 
     if (existingProfile) {
       // Update existing user with adult access
