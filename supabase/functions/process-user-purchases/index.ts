@@ -1,228 +1,149 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'npm:@supabase/supabase-js@2';
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+type PendingPurchase = {
+  id: string;
+  external_product_id: string | null;
+  transaction_id: string | null;
+  payment_status: string | null;
+};
+
+type ProductMapping = {
+  external_product_id: string;
+  grant_type: 'monthly' | 'annual' | 'vip' | 'adult' | 'single_content';
+  content_id: string | null;
+  duration_days: number | null;
+};
+
+const approvedStatuses = new Set(['approved', 'paid', 'completed', 'complete', 'aprovado', 'pago', 'concluido', 'concluído']);
+
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
+  status,
+  headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+});
+
+const addDays = (date: Date, days: number) => {
+  const result = new Date(date);
+  result.setUTCDate(result.getUTCDate() + days);
+  return result.toISOString();
 };
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method !== 'POST') return json({ success: false, error: 'Método não permitido' }, 405);
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!supabaseUrl || !anonKey || !serviceKey) return json({ success: false, error: 'Configuração indisponível' }, 503);
 
-    // Validate the caller's JWT and bind userId to the authenticated user
-    const authHeader = req.headers.get('Authorization') ?? '';
-    const token = authHeader.replace(/^Bearer\s+/i, '');
-    if (!token) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Não autenticado' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const token = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+    if (!token) return json({ success: false, error: 'Não autenticado' }, 401);
+
+    const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } } });
+    const { data: authData, error: authError } = await authClient.auth.getUser();
+    if (authError || !authData.user?.email) return json({ success: false, error: 'Sessão inválida' }, 401);
+
+    const body = await req.json().catch(() => null) as { email?: unknown; userId?: unknown } | null;
+    const requestedEmail = typeof body?.email === 'string' ? body.email.trim() : '';
+    const requestedUserId = typeof body?.userId === 'string' ? body.userId : undefined;
+    if (!requestedEmail || requestedEmail.length > 320 || !requestedEmail.includes('@')) {
+      return json({ success: false, error: 'Dados inválidos' }, 400);
     }
 
-    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-    });
-    const { data: userData, error: userErr } = await authClient.auth.getUser();
-    if (userErr || !userData?.user) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Sessão inválida' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const userId = authData.user.id;
+    const email = requestedEmail.toLowerCase();
+    if (email !== authData.user.email.toLowerCase().trim() || (requestedUserId && requestedUserId !== userId)) {
+      return json({ success: false, error: 'Usuário não autorizado' }, 403);
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    const body = await req.json().catch(() => ({}));
-    const email: string | undefined = body?.email;
-    const requestedUserId: string | undefined = body?.userId;
-
-    if (!email) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Email é obrigatório' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Always trust the authenticated user id; reject mismatches
-    const userId = userData.user.id;
-    if (requestedUserId && requestedUserId !== userId) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Usuário não autorizado' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // The authenticated user's email must match the email whose purchases we're attributing
-    const callerEmail = (userData.user.email ?? '').toLowerCase().trim();
-    const trimmedEmail = String(email).trim().toLowerCase();
-    if (callerEmail && callerEmail !== trimmedEmail) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Email não corresponde à conta autenticada' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log('Processing purchases for user:', trimmedEmail, userId);
-
-
-    // Find all webhooks for this email that need processing
-    const { data: webhooks, error: webhookError } = await supabase
+    const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data: pending, error: pendingError } = await supabase
       .from('purchase_webhooks')
-      .select('*')
-      .eq('buyer_email', trimmedEmail)
+      .select('id, external_product_id, transaction_id, payment_status')
+      .eq('buyer_email', email)
       .eq('processed', false)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true })
+      .limit(200);
+    if (pendingError) throw pendingError;
 
-    if (webhookError) {
-      console.error('Error fetching webhooks:', webhookError);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Erro ao buscar compras' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const approved = ((pending || []) as PendingPurchase[]).filter((purchase) => approvedStatuses.has(String(purchase.payment_status || '').toLowerCase().trim()));
+    const productIds = [...new Set(approved.map((purchase) => purchase.external_product_id).filter((id): id is string => Boolean(id)))];
+    if (productIds.length === 0) return json({ success: true, processed: 0, message: 'Nenhuma compra pendente reconhecida' });
 
-    if (!webhooks || webhooks.length === 0) {
-      console.log('No webhooks found for email:', trimmedEmail);
-      return new Response(
-        JSON.stringify({ success: true, message: 'Nenhuma compra pendente', processed: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const { data: mappings, error: mappingError } = await supabase
+      .from('checkout_product_mappings')
+      .select('external_product_id, grant_type, content_id, duration_days')
+      .in('external_product_id', productIds)
+      .eq('is_active', true);
+    if (mappingError) throw mappingError;
 
-    console.log('Found webhooks:', webhooks.length);
-
+    const mappingByProduct = new Map(((mappings || []) as ProductMapping[]).map((mapping) => [mapping.external_product_id, mapping]));
     let processedCount = 0;
-    const now = new Date();
 
-    for (const webhook of webhooks) {
-      try {
-        const normalizedStatus = String(webhook.payment_status || '').toLowerCase().trim();
-        if (!['approved', 'paid', 'completed', 'complete', 'aprovado', 'pago', 'concluido', 'concluído'].includes(normalizedStatus)) {
-          console.log('Skipping non-approved purchase:', webhook.id);
-          continue;
-        }
-        // Update webhook with user_id if not set
-        if (!webhook.user_id) {
-          await supabase
-            .from('purchase_webhooks')
-            .update({ user_id: userId })
-            .eq('id', webhook.id);
-        }
+    for (const purchase of approved) {
+      const mapping = purchase.external_product_id ? mappingByProduct.get(purchase.external_product_id) : undefined;
+      if (!mapping) continue;
 
-        const rawData = webhook.raw_data || {};
-        const planType = webhook.webhook_type;
+      const now = new Date();
+      if (mapping.grant_type === 'single_content') {
+        if (!mapping.content_id) continue;
+        const { error } = await supabase.from('user_content_purchases').upsert({
+          user_id: userId,
+          content_id: mapping.content_id,
+          purchased_at: now.toISOString(),
+          is_lifetime: true,
+          transaction_id: purchase.transaction_id,
+          webhook_id: purchase.id,
+        }, { onConflict: 'user_id,content_id' });
+        if (error) throw error;
+      } else {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('subscription_end_date, adult_access_end_date')
+          .eq('user_id', userId)
+          .single();
+        if (profileError) throw profileError;
 
-        // Handle single_content purchases
-        if (planType === 'single_content') {
-          const contentId = rawData.content_id || webhook.product_id;
-          
-          if (contentId) {
-            console.log('Processing single_content purchase for content:', contentId);
-            
-            // Check if purchase already exists
-            const { data: existingPurchase } = await supabase
-              .from('user_content_purchases')
-              .select('id')
-              .eq('user_id', userId)
-              .eq('content_id', contentId)
-              .single();
+        const days = mapping.duration_days || (mapping.grant_type === 'monthly' ? 30 : 365);
+        const subscriptionBase = profile.subscription_end_date && new Date(profile.subscription_end_date) > now ? new Date(profile.subscription_end_date) : now;
+        const adultBase = profile.adult_access_end_date && new Date(profile.adult_access_end_date) > now ? new Date(profile.adult_access_end_date) : now;
+        const update: Record<string, unknown> = {};
 
-            if (!existingPurchase) {
-              // Create content purchase entry
-              const { error: purchaseError } = await supabase
-                .from('user_content_purchases')
-                .insert({
-                  user_id: userId,
-                  content_id: contentId,
-                  is_lifetime: true,
-                  webhook_id: webhook.id,
-                });
-
-              if (purchaseError) {
-                console.error('Error creating content purchase:', purchaseError);
-              } else {
-                console.log('Content purchase created successfully');
-                processedCount++;
-              }
-            } else {
-              console.log('Purchase already exists, skipping');
-            }
+        if (mapping.grant_type === 'adult') {
+          update.has_adult_access = true;
+          update.adult_access_start_date = now.toISOString();
+          update.adult_access_end_date = mapping.duration_days ? addDays(adultBase, days) : null;
+        } else {
+          update.subscription_status = 'active';
+          update.plan_type = mapping.grant_type === 'monthly' ? 'monthly' : 'annual';
+          update.subscription_start_date = now.toISOString();
+          update.subscription_end_date = addDays(subscriptionBase, days);
+          if (mapping.grant_type === 'vip') {
+            update.is_vip = true;
+            update.has_adult_access = true;
+            update.adult_access_start_date = now.toISOString();
+            update.adult_access_end_date = addDays(adultBase, days);
           }
         }
 
-        // Handle subscription plans (monthly, annual, adult)
-        if (['monthly', 'annual', 'adult'].includes(planType)) {
-          const endDate = new Date(now);
-          
-          if (planType === 'monthly') {
-            endDate.setMonth(endDate.getMonth() + 1);
-          } else if (planType === 'annual' || planType === 'adult') {
-            endDate.setFullYear(endDate.getFullYear() + 1);
-          }
-
-          const profileUpdate: Record<string, any> = {
-            subscription_status: 'active',
-            plan_type: planType,
-            subscription_start_date: now.toISOString(),
-            subscription_end_date: endDate.toISOString(),
-          };
-
-          // Add adult access if applicable
-          if (planType === 'annual' || planType === 'adult' || rawData.include_adult_access) {
-            profileUpdate.has_adult_access = true;
-            profileUpdate.adult_access_start_date = now.toISOString();
-            profileUpdate.adult_access_end_date = endDate.toISOString();
-          }
-
-          // Check if VIP (from webhook-plano-vip or raw_data)
-          if (rawData.is_vip || rawData.grant_vip) {
-            profileUpdate.is_vip = true;
-          }
-
-          await supabase
-            .from('profiles')
-            .update(profileUpdate)
-            .eq('user_id', userId);
-
-          processedCount++;
-          console.log('Profile subscription updated');
-        }
-
-        // Mark webhook as processed if not already
-        if (!webhook.processed) {
-          await supabase
-            .from('purchase_webhooks')
-            .update({
-              processed: true,
-              processed_at: now.toISOString(),
-              user_id: userId,
-            })
-            .eq('id', webhook.id);
-        }
-      } catch (err) {
-        console.error('Error processing webhook:', webhook.id, err);
+        const { error } = await supabase.from('profiles').update(update).eq('user_id', userId);
+        if (error) throw error;
       }
+
+      const { error: markError } = await supabase.from('purchase_webhooks').update({
+        processed: true,
+        processed_at: now.toISOString(),
+        user_id: userId,
+      }).eq('id', purchase.id);
+      if (markError) throw markError;
+      processedCount += 1;
     }
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: `${processedCount} compra(s) processada(s)`,
-        processed: processedCount
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return json({ success: true, processed: processedCount, message: `${processedCount} compra(s) processada(s)` });
   } catch (error) {
-    console.error('Erro:', error);
-    return new Response(
-      JSON.stringify({ success: false, error: 'Erro interno do servidor' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.error('Erro ao processar compras:', error instanceof Error ? error.message : 'Erro desconhecido');
+    return json({ success: false, error: 'Erro temporário ao processar compras' }, 500);
   }
 });
