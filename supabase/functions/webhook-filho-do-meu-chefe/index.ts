@@ -7,11 +7,12 @@ const corsHeaders = {
 
 const FILHO_CHEFE_CONTENT_ID = 'f81aa496-708e-4154-99b7-1148f4f91f77';
 const FILHO_CHEFE_TITLE = 'O Filho do meu Chefe';
+const FILHO_CHEFE_PRODUCT_IDS = new Set(['8Uuv0D8fdlQltbgDcVPM']);
 
 const normalizeEmail = (email: unknown) => String(email || '').toLowerCase().trim();
 
 const isApprovedPayment = (status: unknown) => {
-  const normalized = String(status || 'approved').toLowerCase().trim();
+  const normalized = String(status || '').toLowerCase().trim();
   return ['approved', 'paid', 'completed', 'complete', 'aprovado', 'pago', 'concluido', 'concluído'].includes(normalized);
 };
 
@@ -65,14 +66,14 @@ Deno.serve(async (req) => {
       payload.buyer_document ||
       null;
 
-    const amount = payload.purchase?.value ||
+    const amount = payload.payment?.amount || payload.purchase?.value ||
       payload.amount ||
       payload.value ||
       payload.data?.purchase?.value ||
       payload.transaction?.amount ||
       0;
 
-    const transactionId = payload.purchase?.transaction ||
+    const transactionId = payload.payment?.id || payload.purchase?.transaction ||
       payload.transaction_id ||
       payload.transaction?.id ||
       payload.data?.purchase?.transaction ||
@@ -87,12 +88,12 @@ Deno.serve(async (req) => {
       payload.payment?.method ||
       'unknown';
 
-    const paymentStatus = payload.purchase?.status ||
+    const paymentStatus = payload.payment?.status || payload.purchase?.status ||
       payload.payment_status ||
       payload.status ||
       payload.data?.purchase?.status ||
-      payload.payment?.status ||
-      'approved';
+      '';
+    const checkoutProductId = payload.product?.id || payload.products?.[0]?.id || payload.product_id || payload.data?.product?.id || '';
 
     if (!buyerEmail) {
       return new Response(
@@ -101,9 +102,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!isApprovedPayment(paymentStatus)) {
+    if (!isApprovedPayment(paymentStatus) || !FILHO_CHEFE_PRODUCT_IDS.has(String(checkoutProductId))) {
       return new Response(
-        JSON.stringify({ success: true, ignored: true, reason: 'Pagamento ainda não aprovado' }),
+        JSON.stringify({ success: true, ignored: true, reason: 'Pagamento não aprovado ou produto incorreto' }),
         { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }

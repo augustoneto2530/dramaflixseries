@@ -22,9 +22,9 @@ export function useContentAccess() {
   const { data: purchasedContents = [], isLoading: purchasesQueryLoading } = useQuery({
     queryKey: ['user-purchases', user?.id],
     enabled: !!user && !authLoading,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
     gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: 'always',
     refetchOnMount: false,
     retry: 1,
     queryFn: async (): Promise<PurchasedContent[]> => {

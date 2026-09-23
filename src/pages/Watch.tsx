@@ -49,7 +49,7 @@ export default function Watch() {
   const [currentEpisode, setCurrentEpisode] = useState<Episode | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -412,6 +412,7 @@ export default function Watch() {
           toast.error('Erro ao carregar vídeo. Verifique sua conexão e tente novamente.');
         }}
         playsInline
+        muted={isMuted}
         preload="auto"
         autoPlay
       />
