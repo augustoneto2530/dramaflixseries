@@ -6,5 +6,5 @@
 - [x] Testar cadastro, login e atualização pós-compra
 - [x] Otimizar abertura e buffering dos vídeos
 - [x] Verificar atividade real e integridade dos episódios
-- [ ] Executar testes de segurança e funcionamento
+- [x] Executar testes de segurança e funcionamento
 - [ ] Publicar e validar o site público

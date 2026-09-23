@@ -89,8 +89,6 @@ export default function AdminWebhooks() {
     return matchesSearch && w.webhook_type === activeTab;
   });
 
-  const getStatsByType = (type: string) => webhooks.filter(w => w.webhook_type === type).length;
-
   if (isLoading || !isAdmin) return null;
 
   return (
