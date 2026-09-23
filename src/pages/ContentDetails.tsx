@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play, Plus, Star, Calendar, Clock, Film, ChevronLeft, Lock, Check } from "lucide-react";
 import { toast } from "sonner";
+import { CHECKOUT_LINKS } from "@/lib/checkoutLinks";
 
 interface Episode {
   id: string;
@@ -377,7 +378,7 @@ export default function ContentDetails() {
         open={showAccessPopup}
         onOpenChange={setShowAccessPopup}
         type={blockedReason || "premium"}
-        adultPurchaseLink="https://ggcheckout.app/checkout/v5/7ZsajmzPRfzCuIh5vUG1"
+        adultPurchaseLink={CHECKOUT_LINKS.adultContentPage}
       />
     </Layout>
   );

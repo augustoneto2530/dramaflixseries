@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Check, Crown, Calendar, Tv, Flame, Star, Ban, Heart, Sparkles, Shield, Zap, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout/Layout";
+import { CHECKOUT_LINKS } from "@/lib/checkoutLinks";
 
 const monthlyFeatures = [
   { icon: Tv, text: "+10.000 minisséries e doramas" },
@@ -21,11 +22,11 @@ const annualFeatures = [
 
 export default function Plans() {
   const handleMonthlyClick = () => {
-    window.open("https://ggcheckout.app/checkout/v5/7OKYddFAbmOKkwAJAwu5");
+    window.open(CHECKOUT_LINKS.monthly, "_blank", "noopener,noreferrer");
   };
 
   const handleAnnualClick = () => {
-    window.open("https://ggcheckout.app/checkout/v5/mQb46CSFk2UVrn1L5lGE", "_blank");
+    window.open(CHECKOUT_LINKS.annualVip, "_blank", "noopener,noreferrer");
   };
 
   return (
