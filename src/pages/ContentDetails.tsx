@@ -128,11 +128,13 @@ export default function ContentDetails() {
 
     if (accessLoading || !content) return;
 
-    // If user has access, navigate to watch immediately
     const accessResult = checkContentAccess(content);
-    if (accessResult.hasAccess) {
-      navigate(`/assistir/${id}?ep=${episode.id}`);
+    if (!accessResult.hasAccess) {
+      setShowAccessPopup(true);
+      return;
     }
+
+    navigate(`/assistir/${id}?ep=${episode.id}`);
   };
 
   const handleToggleWatchlist = async () => {
