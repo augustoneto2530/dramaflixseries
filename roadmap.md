@@ -7,4 +7,4 @@
 - [x] Otimizar abertura e buffering dos vídeos
 - [x] Verificar atividade real e integridade dos episódios
 - [x] Executar testes de segurança e funcionamento
-- [ ] Publicar e validar o site público
+- [x] Publicar e validar o site público
