@@ -45,12 +45,12 @@ export default function AdminWebhookGenerator() {
     }
   };
 
-  const getWebhookUrl = (contentId: string) => {
-    return `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webhook-single-content?content_id=${contentId}`;
+  const getWebhookUrl = () => {
+    return `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webhook-unificado`;
   };
 
   const copyWebhookUrl = (contentId: string, contentTitle: string) => {
-    const url = getWebhookUrl(contentId);
+    const url = getWebhookUrl();
     navigator.clipboard.writeText(url);
     setCopiedId(contentId);
     toast({ title: 'URL copiada!', description: `Webhook de "${contentTitle}" copiado para a área de transferência` });
@@ -96,7 +96,7 @@ export default function AdminWebhookGenerator() {
               </Link>
               <div>
                 <h1 className="text-xl font-bold">Gerador de Webhooks</h1>
-                <p className="text-sm text-muted-foreground">Crie webhooks para venda de conteúdos individuais</p>
+                <p className="text-sm text-muted-foreground">Consulte o endereço único para compras</p>
               </div>
             </div>
           </div>
@@ -113,10 +113,9 @@ export default function AdminWebhookGenerator() {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-2">
-            <p>1. Encontre o conteúdo que deseja vender individualmente</p>
-            <p>2. Clique em <strong>"Copiar URL"</strong> para copiar o webhook específico</p>
-            <p>3. Configure este URL na sua plataforma de pagamento (Hotmart, Monetizze, etc.)</p>
-            <p>4. Quando uma compra for confirmada, o usuário receberá acesso apenas a este conteúdo</p>
+            <p>1. Todos os produtos usam o mesmo endereço abaixo</p>
+            <p>2. O produto precisa estar cadastrado antes de receber vendas</p>
+            <p>3. Compras avulsas liberam somente o conteúdo vinculado ao produto</p>
           </CardContent>
         </Card>
 
@@ -176,7 +175,7 @@ export default function AdminWebhookGenerator() {
                       </p>
                       <div className="flex items-center gap-2 flex-wrap">
                         <code className="text-[10px] bg-muted px-2 py-1 rounded truncate max-w-[300px] md:max-w-[500px]">
-                          {getWebhookUrl(content.id)}
+                          {getWebhookUrl()}
                         </code>
                       </div>
                     </div>

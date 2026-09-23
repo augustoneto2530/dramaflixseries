@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Search, CheckCircle, Clock, AlertCircle, Copy, Flame, Crown, FileText, Calendar, Plus } from 'lucide-react';
+import { ArrowLeft, Search, CheckCircle, Clock, AlertCircle, Copy, Link2, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -57,6 +57,12 @@ export default function AdminWebhooks() {
     const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webhook-${type}`;
     navigator.clipboard.writeText(baseUrl);
     toast({ title: 'Copiado!', description: `URL do webhook ${type} copiada` });
+  };
+
+  const copyUnifiedWebhookUrl = () => {
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webhook-unificado`;
+    navigator.clipboard.writeText(url);
+    toast({ title: 'Copiado!', description: 'URL única do GGCheckout copiada' });
   };
 
   const getWebhookTypeLabel = (type: string) => {
@@ -116,84 +122,24 @@ export default function AdminWebhooks() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Webhook URLs */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="border-blue-500/30 hover:border-blue-500/50 transition-colors">
+        <div className="mb-8">
+          <Card className="border-primary/30">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-blue-500" />
-                <CardTitle className="text-sm font-medium">Webhook Mensal</CardTitle>
+                <Link2 className="h-4 w-4 text-primary" />
+                <CardTitle className="text-sm font-medium">Webhook único do GGCheckout</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
                 <code className="text-xs bg-muted p-2 rounded flex-1 truncate">
-                  .../webhook-monthly
+                  .../webhook-unificado
                 </code>
-                <Button size="sm" variant="outline" onClick={() => copyWebhookUrl('monthly')}>
+                <Button size="sm" variant="outline" onClick={copyUnifiedWebhookUrl} aria-label="Copiar webhook único">
                   <Copy className="h-3 w-3" />
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">{getStatsByType('monthly')} recebidos</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-primary/30 hover:border-primary/50 transition-colors">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <Crown className="h-4 w-4 text-primary" />
-                <CardTitle className="text-sm font-medium">Webhook Anual</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <code className="text-xs bg-muted p-2 rounded flex-1 truncate">
-                  .../webhook-annual
-                </code>
-                <Button size="sm" variant="outline" onClick={() => copyWebhookUrl('annual')}>
-                  <Copy className="h-3 w-3" />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">{getStatsByType('annual')} recebidos</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-category-adult/30 hover:border-category-adult/50 transition-colors">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <Flame className="h-4 w-4 text-category-adult" />
-                <CardTitle className="text-sm font-medium">Webhook +18</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <code className="text-xs bg-muted p-2 rounded flex-1 truncate">
-                  .../webhook-adult
-                </code>
-                <Button size="sm" variant="outline" onClick={() => copyWebhookUrl('adult')}>
-                  <Copy className="h-3 w-3" />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">{getStatsByType('adult')} recebidos</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-green-500/30 hover:border-green-500/50 transition-colors">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-green-500" />
-                <CardTitle className="text-sm font-medium">Conteúdo Único</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <code className="text-xs bg-muted p-2 rounded flex-1 truncate">
-                  .../webhook-single-content?content_id=ID
-                </code>
-                <Button size="sm" variant="outline" onClick={() => copyWebhookUrl('single-content')}>
-                  <Copy className="h-3 w-3" />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">{getStatsByType('single_content')} recebidos</p>
+              <p className="text-xs text-muted-foreground mt-2">Use este endereço para todos os produtos cadastrados.</p>
             </CardContent>
           </Card>
         </div>

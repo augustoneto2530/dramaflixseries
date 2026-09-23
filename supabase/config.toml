@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.webhook-apaixonada-melhor-amigo-pai]
 verify_jwt = false
+
+[functions.webhook-unificado]
+verify_jwt = false
