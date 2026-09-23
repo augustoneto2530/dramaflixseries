@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Play, Plus, Star, Calendar, Clock, Film, ChevronLeft, Lock, Check } from "lucide-react";
 import { toast } from "sonner";
 import { CHECKOUT_LINKS } from "@/lib/checkoutLinks";
+import { isPlayableVideoUrl } from "@/lib/media";
 
 interface Episode {
   id: string;
@@ -80,9 +81,10 @@ export default function ContentDetails() {
         const { data: episodesData, error: episodesError } = episodesResult;
 
         if (!episodesError && episodesData) {
-          setEpisodes(episodesData);
-          if (episodesData.length > 0) {
-            setSelectedEpisode(episodesData[0]);
+          const playableEpisodes = episodesData.filter((episode) => isPlayableVideoUrl(episode.video_url));
+          setEpisodes(playableEpisodes);
+          if (playableEpisodes.length > 0) {
+            setSelectedEpisode(playableEpisodes[0]);
           }
         }
 

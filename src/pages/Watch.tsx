@@ -18,6 +18,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { isPlayableVideoUrl } from '@/lib/media';
 
 interface Episode {
   id: string;
@@ -204,18 +205,20 @@ export default function Watch() {
 
         const { data: episodesData, error: episodesError } = episodesResult;
 
-        if (!episodesError && episodesData && episodesData.length > 0) {
-          setEpisodes(episodesData);
+        const playableEpisodes = (episodesData || []).filter((episode) => isPlayableVideoUrl(episode.video_url));
+
+        if (!episodesError && playableEpisodes.length > 0) {
+          setEpisodes(playableEpisodes);
           
           // Find current episode
           if (episodeId) {
-            const episode = episodesData.find(ep => ep.id === episodeId);
-            setCurrentEpisode(episode || episodesData[0]);
+            const episode = playableEpisodes.find(ep => ep.id === episodeId);
+            setCurrentEpisode(episode || playableEpisodes[0]);
           } else {
-            setCurrentEpisode(episodesData[0]);
+            setCurrentEpisode(playableEpisodes[0]);
           }
-        } else if (!episodesError && (!episodesData || episodesData.length === 0)) {
-          toast.error('Nenhum episódio disponível');
+        } else if (!episodesError) {
+          toast.error('Nenhum vídeo válido disponível para este conteúdo');
           navigate(`/conteudo/${id}`);
         }
       } catch (error) {
