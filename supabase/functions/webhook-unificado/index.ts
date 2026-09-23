@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3.24.2';
+import { isAuthorized } from './auth.ts';
 
 const PayloadSchema = z.object({
   event: z.string().max(100).optional(),
@@ -40,16 +41,6 @@ type ProductMapping = {
 
 const approvedEvents = new Set(['pix.paid', 'card.paid', 'payment.approved', 'purchase.approved']);
 const approvedStatuses = new Set(['paid', 'approved', 'completed', 'complete', 'aprovado', 'pago', 'concluido', 'concluído']);
-
-export const isAuthorized = (provided: string, expected: string) => {
-  const encoder = new TextEncoder();
-  const left = encoder.encode(provided);
-  const right = encoder.encode(expected);
-  if (left.length !== right.length) return false;
-  let result = 0;
-  for (let index = 0; index < left.length; index += 1) result |= left[index] ^ right[index];
-  return result === 0;
-};
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
   status,
@@ -113,9 +104,21 @@ Deno.serve(async (req) => {
     let repeated = 0;
     for (const mapping of recognized) {
       const webhookType = mapping.grant_type === 'vip' ? 'annual' : mapping.grant_type;
+      const { data: existingWebhook, error: existingError } = await supabase
+        .from('purchase_webhooks')
+        .select('id, processed')
+        .eq('transaction_id', payload.payment.id)
+        .eq('external_product_id', mapping.external_product_id)
+        .maybeSingle();
+      if (existingError) throw existingError;
+      if (existingWebhook) {
+        repeated += 1;
+        continue;
+      }
+
       const { data: webhook, error: webhookError } = await supabase
         .from('purchase_webhooks')
-        .upsert({
+        .insert({
           webhook_type: webhookType,
           buyer_email: email,
           buyer_name: payload.customer.name || null,
@@ -132,15 +135,11 @@ Deno.serve(async (req) => {
           raw_data: payload,
           processed: false,
           user_id: profile?.user_id || null,
-        }, { onConflict: 'transaction_id,external_product_id', ignoreDuplicates: true })
+        })
         .select('id, processed')
-        .maybeSingle();
+        .single();
 
       if (webhookError) throw webhookError;
-      if (!webhook) {
-        repeated += 1;
-        continue;
-      }
       if (!profile?.user_id) continue;
 
       if (mapping.grant_type === 'single_content') {

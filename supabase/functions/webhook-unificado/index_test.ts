@@ -1,5 +1,5 @@
 import { assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
-import { isAuthorized } from './index.ts';
+import { isAuthorized } from './auth.ts';
 
 Deno.test('accepts an identical webhook secret', () => {
   assertEquals(isAuthorized('a'.repeat(40), 'a'.repeat(40)), true);

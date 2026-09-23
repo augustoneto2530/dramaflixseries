@@ -53,12 +53,6 @@ export default function AdminWebhooks() {
     }
   };
 
-  const copyWebhookUrl = (type: string) => {
-    const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webhook-${type}`;
-    navigator.clipboard.writeText(baseUrl);
-    toast({ title: 'Copiado!', description: `URL do webhook ${type} copiada` });
-  };
-
   const copyUnifiedWebhookUrl = () => {
     const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webhook-unificado`;
     navigator.clipboard.writeText(url);
