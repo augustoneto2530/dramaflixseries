@@ -1,11 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
-import { z } from 'npm:zod@3.24.2';
-
-const BodySchema = z.object({
-  email: z.string().email().max(320),
-  userId: z.string().uuid().optional(),
-});
 
 type PendingPurchase = {
   id: string;
@@ -51,12 +45,16 @@ Deno.serve(async (req) => {
     const { data: authData, error: authError } = await authClient.auth.getUser();
     if (authError || !authData.user?.email) return json({ success: false, error: 'Sessão inválida' }, 401);
 
-    const parsed = BodySchema.safeParse(await req.json().catch(() => null));
-    if (!parsed.success) return json({ success: false, error: 'Dados inválidos' }, 400);
+    const body = await req.json().catch(() => null) as { email?: unknown; userId?: unknown } | null;
+    const requestedEmail = typeof body?.email === 'string' ? body.email.trim() : '';
+    const requestedUserId = typeof body?.userId === 'string' ? body.userId : undefined;
+    if (!requestedEmail || requestedEmail.length > 320 || !requestedEmail.includes('@')) {
+      return json({ success: false, error: 'Dados inválidos' }, 400);
+    }
 
     const userId = authData.user.id;
-    const email = parsed.data.email.toLowerCase().trim();
-    if (email !== authData.user.email.toLowerCase().trim() || (parsed.data.userId && parsed.data.userId !== userId)) {
+    const email = requestedEmail.toLowerCase();
+    if (email !== authData.user.email.toLowerCase().trim() || (requestedUserId && requestedUserId !== userId)) {
       return json({ success: false, error: 'Usuário não autorizado' }, 403);
     }
 
