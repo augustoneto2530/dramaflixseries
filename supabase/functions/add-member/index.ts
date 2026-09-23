@@ -15,6 +15,26 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    const authHeader = req.headers.get('Authorization') || '';
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    if (!token) {
+      return new Response(JSON.stringify({ success: false, error: 'Não autenticado' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    const { data: authData, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !authData.user) {
+      return new Response(JSON.stringify({ success: false, error: 'Sessão inválida' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: authData.user.id, _role: 'admin' });
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ success: false, error: 'Acesso restrito a administradores' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     const { email, name, planType, includeAdultAccess, contentId } = await req.json();
 
     if (!email) {
@@ -89,8 +109,8 @@ Deno.serve(async (req) => {
     }
 
     // Check if user already exists
-    const { data: existingUsers } = await supabase.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(u => u.email === trimmedEmail);
+    const { data: existingUserId } = await supabase.rpc('get_auth_user_id_by_email', { p_email: trimmedEmail });
+    const existingUser = existingUserId ? { id: existingUserId } : null;
 
     if (existingUser) {
       console.log('Usuário já existe:', existingUser.id);
@@ -141,12 +161,12 @@ Deno.serve(async (req) => {
       if (planType === 'single_content' && contentId) {
         await supabase
           .from('user_content_purchases')
-          .insert({
+          .upsert({
             user_id: existingUser.id,
             content_id: contentId,
             is_lifetime: true,
             webhook_id: webhookData?.id || null,
-          });
+          }, { onConflict: 'user_id,content_id' });
         console.log('Acesso ao conteúdo liberado para usuário existente');
       }
 

@@ -6,6 +6,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const ADULT_PRODUCT_IDS = new Set(['VnpWFbnax9M5QoDGUi2n', 'ERy0xyuVlJqcevf1C4sB', 'UrOSQiVwaQgONK16jfG5']);
+const isApprovedPayment = (status: unknown) =>
+  ['approved', 'paid', 'completed', 'complete', 'aprovado', 'pago', 'concluido', 'concluído']
+    .includes(String(status || '').toLowerCase().trim());
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -56,13 +61,13 @@ serve(async (req) => {
                           rawData.customer?.document ||
                           null;
 
-    const amount = rawData.amount || 
+    const amount = rawData.payment?.amount || rawData.amount || 
                    rawData.value ||
                    rawData.purchase?.value ||
                    rawData.data?.purchase?.value ||
                    null;
 
-    const transactionId = rawData.transaction_id ||
+    const transactionId = rawData.payment?.id || rawData.transaction_id ||
                           rawData.transaction ||
                           rawData.purchase_id ||
                           rawData.order_id ||
@@ -74,7 +79,7 @@ serve(async (req) => {
                       rawData.data?.product?.id ||
                       null;
 
-    const productName = rawData.product_name ||
+    const productName = rawData.product?.title || rawData.products?.[0]?.title || rawData.product_name ||
                         rawData.product?.name ||
                         rawData.data?.product?.name ||
                         'Acesso +18';
@@ -84,10 +89,17 @@ serve(async (req) => {
                           rawData.data?.payment?.method ||
                           null;
 
-    const paymentStatus = rawData.payment_status ||
+    const paymentStatus = rawData.payment?.status || rawData.payment_status ||
                           rawData.status ||
                           rawData.payment?.status ||
-                          'approved';
+                           '';
+    const checkoutProductId = rawData.product?.id || rawData.products?.[0]?.id || productId || '';
+
+    if (!isApprovedPayment(paymentStatus) || !ADULT_PRODUCT_IDS.has(String(checkoutProductId))) {
+      return new Response(JSON.stringify({ success: true, ignored: true, reason: 'Pagamento não aprovado ou produto incorreto' }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     // Save webhook data
     const { data: webhookData, error: webhookError } = await supabase

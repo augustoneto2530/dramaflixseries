@@ -75,7 +75,9 @@ Deno.serve(async (req) => {
     const { data: webhooks, error: webhookError } = await supabase
       .from('purchase_webhooks')
       .select('*')
-      .eq('buyer_email', trimmedEmail);
+      .eq('buyer_email', trimmedEmail)
+      .eq('processed', false)
+      .order('created_at', { ascending: true });
 
     if (webhookError) {
       console.error('Error fetching webhooks:', webhookError);
@@ -100,6 +102,11 @@ Deno.serve(async (req) => {
 
     for (const webhook of webhooks) {
       try {
+        const normalizedStatus = String(webhook.payment_status || '').toLowerCase().trim();
+        if (!['approved', 'paid', 'completed', 'complete', 'aprovado', 'pago', 'concluido', 'concluído'].includes(normalizedStatus)) {
+          console.log('Skipping non-approved purchase:', webhook.id);
+          continue;
+        }
         // Update webhook with user_id if not set
         if (!webhook.user_id) {
           await supabase
