@@ -9,4 +9,5 @@
 - [x] Executar testes de segurança e funcionamento
 - [x] Publicar e validar o site público
 - [x] Corrigir a validação inicial do webhook único no GGCheckout
-- [ ] Trocar no GGCheckout para o webhook único e então desativar os endereços antigos — aguardando configuração externa
+- [ ] Manter e validar todos os webhooks antigos de compras e planos
+- [ ] Validar acesso avulso, compra pelo site e desbloqueio após pagamento/login
