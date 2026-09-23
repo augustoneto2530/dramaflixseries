@@ -119,6 +119,11 @@ export function useContentAccess() {
       return { hasAccess: true, accessType: 'full', purchasedContentIds };
     }
 
+    // Standalone +18 access also applies when the customer has no monthly plan.
+    if (content.is_adult && hasValidAdultAccess) {
+      return { hasAccess: true, accessType: 'adult_only', purchasedContentIds };
+    }
+
     // Monthly subscription
     if (hasValidSubscription && profile.plan_type === 'monthly') {
       // Check for adult content - Monthly users NEVER have access to adult content without paying extra
@@ -132,13 +137,6 @@ export function useContentAccess() {
       }
       // Non-adult content is accessible for monthly users
       return { hasAccess: true, accessType: 'full', purchasedContentIds };
-    }
-
-    // No access
-    return { hasAccess: false, accessType: 'none', purchasedContentIds };
-    // Standalone +18 access also applies when the customer has no monthly plan.
-    if (content.is_adult && hasValidAdultAccess) {
-      return { hasAccess: true, accessType: 'adult_only', purchasedContentIds };
     }
 
     return { hasAccess: false, accessType: 'none', purchasedContentIds };
