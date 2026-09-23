@@ -5,9 +5,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const FILHO_CHEFE_CONTENT_ID = 'f81aa496-708e-4154-99b7-1148f4f91f77';
-const FILHO_CHEFE_TITLE = 'O Filho do meu Chefe';
-const FILHO_CHEFE_PRODUCT_IDS = new Set(['8Uuv0D8fdlQltbgDcVPM']);
+const PRODUCT_ACCESS = new Map([
+  ['8Uuv0D8fdlQltbgDcVPM', {
+    contentId: 'f81aa496-708e-4154-99b7-1148f4f91f77',
+    title: 'O Filho do meu Chefe',
+  }],
+  ['DdDZosKap9UaVb8SCgEd', {
+    contentId: '6084c12a-635e-4feb-b62c-db1eb68f3acf',
+    title: 'O Pai do meu namorado, meu pecado!',
+  }],
+]);
 
 const normalizeEmail = (email: unknown) => String(email || '').toLowerCase().trim();
 
@@ -29,7 +36,11 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const payload = await req.json();
-    console.log('Payload recebido:', JSON.stringify(payload, null, 2));
+    console.log('Notificação recebida', {
+      event: payload.event,
+      transactionId: payload.payment?.id,
+      productId: payload.product?.id || payload.products?.[0]?.id,
+    });
 
     const buyerEmail = normalizeEmail(
       payload.buyer?.email ||
@@ -94,6 +105,7 @@ Deno.serve(async (req) => {
       payload.data?.purchase?.status ||
       '';
     const checkoutProductId = payload.product?.id || payload.products?.[0]?.id || payload.product_id || payload.data?.product?.id || '';
+    const selectedAccess = PRODUCT_ACCESS.get(String(checkoutProductId));
 
     if (!buyerEmail) {
       return new Response(
@@ -102,7 +114,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!isApprovedPayment(paymentStatus) || !FILHO_CHEFE_PRODUCT_IDS.has(String(checkoutProductId))) {
+    if (!isApprovedPayment(paymentStatus) || !selectedAccess) {
       return new Response(
         JSON.stringify({ success: true, ignored: true, reason: 'Pagamento não aprovado ou produto incorreto' }),
         { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
@@ -112,13 +124,13 @@ Deno.serve(async (req) => {
     const { data: contentData, error: contentError } = await supabase
       .from('contents')
       .select('id, title')
-      .eq('id', FILHO_CHEFE_CONTENT_ID)
+      .eq('id', selectedAccess.contentId)
       .single();
 
     if (contentError || !contentData) {
       console.error('Conteúdo não encontrado:', contentError);
       return new Response(
-        JSON.stringify({ error: 'Conteúdo O Filho do meu Chefe não encontrado' }),
+        JSON.stringify({ error: 'Conteúdo comprado não encontrado' }),
         { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -134,8 +146,9 @@ Deno.serve(async (req) => {
         buyer_document: buyerDocument,
         amount,
         transaction_id: transactionId,
-        product_id: FILHO_CHEFE_CONTENT_ID,
-        product_name: FILHO_CHEFE_TITLE,
+        external_product_id: String(checkoutProductId),
+        product_id: selectedAccess.contentId,
+        product_name: selectedAccess.title,
         payment_method: paymentMethod,
         payment_status: paymentStatus,
         processed: false,
@@ -228,7 +241,7 @@ Deno.serve(async (req) => {
       .from('user_content_purchases')
       .upsert({
         user_id: userId,
-        content_id: FILHO_CHEFE_CONTENT_ID,
+        content_id: selectedAccess.contentId,
         purchased_at: new Date().toISOString(),
         is_lifetime: true,
         transaction_id: transactionId,
@@ -248,14 +261,14 @@ Deno.serve(async (req) => {
       .update({ processed: true, processed_at: new Date().toISOString(), user_id: userId })
       .eq('id', webhookData.id);
 
-    console.log('=== Webhook Filho do Meu Chefe - Concluído ===');
+    console.log('=== Webhook avulso - Concluído ===');
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Compra de O Filho do meu Chefe processada com sucesso',
+        message: `Compra de ${selectedAccess.title} processada com sucesso`,
         user_id: userId,
-        content_id: FILHO_CHEFE_CONTENT_ID,
+        content_id: selectedAccess.contentId,
         content_title: contentData.title,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }

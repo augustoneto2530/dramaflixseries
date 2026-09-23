@@ -11,3 +11,4 @@
 - [x] Corrigir a validação inicial do webhook único no GGCheckout
 - [ ] Manter e validar todos os webhooks antigos de compras e planos
 - [ ] Validar acesso avulso, compra pelo site e desbloqueio após pagamento/login
+- [x] Conferir a venda recente de "O Pai do Meu Namorado, Meu Pecado" e validar seu webhook
