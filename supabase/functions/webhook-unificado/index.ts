@@ -55,9 +55,27 @@ const addDays = (date: Date, days: number) => {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    return json({ success: true, service: 'webhook-unificado' });
+  }
   if (req.method !== 'POST') return json({ success: false, error: 'Método não permitido' }, 405);
 
   try {
+    const rawBody = await req.text();
+    let body: unknown = null;
+    try {
+      body = rawBody ? JSON.parse(rawBody) : null;
+    } catch {
+      return json({ success: true, ignored: true, reason: 'Verificação recebida sem compra' });
+    }
+
+    const possiblePayload = body && typeof body === 'object' ? body as Record<string, unknown> : null;
+    const isSetupCheck = !possiblePayload
+      || (!possiblePayload.payment && !possiblePayload.customer && !possiblePayload.product);
+    if (isSetupCheck) {
+      return json({ success: true, ignored: true, reason: 'Verificação do webhook concluída' });
+    }
+
     const expectedSecret = Deno.env.get('GGCHECKOUT_WEBHOOK_SECRET');
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -69,8 +87,11 @@ Deno.serve(async (req) => {
       return json({ success: false, error: 'Notificação não autorizada' }, 401);
     }
 
-    const parsed = PayloadSchema.safeParse(await req.json().catch(() => null));
-    if (!parsed.success) return json({ success: false, error: 'Notificação inválida', fields: parsed.error.flatten().fieldErrors }, 400);
+    const parsed = PayloadSchema.safeParse(body);
+    if (!parsed.success) {
+      console.warn('Payload GGCheckout rejeitado:', parsed.error.flatten().fieldErrors);
+      return json({ success: true, ignored: true, reason: 'Notificação incompleta' });
+    }
 
     const payload = parsed.data;
     const event = String(payload.event || '').toLowerCase().trim();
