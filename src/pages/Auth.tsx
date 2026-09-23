@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 
 const emailSchema = z.string().trim().email('Email inválido').max(255, 'Email muito longo');
@@ -33,6 +34,7 @@ export default function Auth() {
 
   const { signIn, signUp, refreshProfile } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -216,6 +218,9 @@ export default function Auth() {
           await supabase.functions.invoke('process-user-purchases', {
             body: { email, userId: sessionData.session.user.id }
           });
+          await queryClient.invalidateQueries({
+            queryKey: ['user-purchases', sessionData.session.user.id],
+          });
         } catch (purchaseErr) {
           console.error('Error processing purchases:', purchaseErr);
           // Continue anyway - purchases can be processed later
@@ -258,6 +263,7 @@ export default function Auth() {
       return;
     }
 
+    await queryClient.invalidateQueries({ queryKey: ['user-purchases', userId] });
     await refreshProfile();
   };
 
