@@ -50,12 +50,22 @@ export default function ContentDetails() {
       try {
         setLoading(true);
 
-        // Fetch content
-        const { data: contentData, error: contentError } = await supabase
-          .from("contents")
+        const contentRequest = supabase.from("contents").select("*").eq("id", id).single();
+        const episodesRequest = supabase
+          .from("episodes")
           .select("*")
-          .eq("id", id)
-          .single();
+          .eq("content_id", id)
+          .order("episode_number", { ascending: true });
+        const watchlistRequest = user
+          ? supabase.from("user_watchlist").select("id").eq("user_id", user.id).eq("content_id", id).maybeSingle()
+          : Promise.resolve({ data: null, error: null });
+
+        const [contentResult, episodesResult, watchlistResult] = await Promise.all([
+          contentRequest,
+          episodesRequest,
+          watchlistRequest,
+        ]);
+        const { data: contentData, error: contentError } = contentResult;
 
         if (contentError) {
           console.error("Error fetching content:", contentError);
@@ -66,12 +76,7 @@ export default function ContentDetails() {
           setContent(contentData as Content);
         }
 
-        // Fetch episodes
-        const { data: episodesData, error: episodesError } = await supabase
-          .from("episodes")
-          .select("*")
-          .eq("content_id", id)
-          .order("episode_number", { ascending: true });
+        const { data: episodesData, error: episodesError } = episodesResult;
 
         if (!episodesError && episodesData) {
           setEpisodes(episodesData);
@@ -80,17 +85,7 @@ export default function ContentDetails() {
           }
         }
 
-        // Check watchlist
-        if (user) {
-          const { data: watchlistData } = await supabase
-            .from("user_watchlist")
-            .select("id")
-            .eq("user_id", user.id)
-            .eq("content_id", id)
-            .single();
-
-          setIsInWatchlist(!!watchlistData);
-        }
+        setIsInWatchlist(!!watchlistResult.data);
       } catch (error) {
         console.error("Error:", error);
       } finally {
@@ -128,10 +123,10 @@ export default function ContentDetails() {
   const handleEpisodeClick = (episode: Episode) => {
     setSelectedEpisode(episode);
 
-    if (accessLoading) return;
+    if (accessLoading || !content) return;
 
     // If user has access, navigate to watch immediately
-    const accessResult = checkContentAccess(content!);
+    const accessResult = checkContentAccess(content);
     if (accessResult.hasAccess) {
       navigate(`/assistir/${id}?ep=${episode.id}`);
     }
