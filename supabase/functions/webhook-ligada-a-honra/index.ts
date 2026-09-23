@@ -7,6 +7,9 @@ const corsHeaders = {
 
 // ID do conteúdo "Ligada a Honra"
 const LIGADA_A_HONRA_CONTENT_ID = '840dbec5-3144-4069-80a8-8413bf3497a9';
+const isApprovedPayment = (status: unknown) =>
+  ['approved', 'paid', 'completed', 'complete', 'aprovado', 'pago', 'concluido', 'concluído']
+    .includes(String(status || '').toLowerCase().trim());
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
@@ -50,14 +53,14 @@ Deno.serve(async (req) => {
                           payload.data?.buyer?.document;
 
     // Extração de dados da transação
-    const amount = payload.purchase?.value || 
+    const amount = payload.payment?.amount || payload.purchase?.value || 
                    payload.amount || 
                    payload.value || 
                    payload.data?.purchase?.value ||
                    payload.transaction?.amount || 
                    0;
     
-    const transactionId = payload.purchase?.transaction || 
+    const transactionId = payload.payment?.id || payload.purchase?.transaction || 
                           payload.transaction_id || 
                           payload.transaction?.id ||
                           payload.data?.purchase?.transaction ||
@@ -79,10 +82,10 @@ Deno.serve(async (req) => {
                           payload.data?.purchase?.payment_method ||
                           'unknown';
     
-    const paymentStatus = payload.purchase?.status || 
+    const paymentStatus = payload.payment?.status || payload.purchase?.status || 
                           payload.status || 
-                          payload.data?.purchase?.status ||
-                          'approved';
+                           payload.data?.purchase?.status ||
+                           '';
 
     // Validação do email
     if (!buyerEmail) {
@@ -92,6 +95,15 @@ Deno.serve(async (req) => {
         { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
+
+    if (!isApprovedPayment(paymentStatus)) {
+      return new Response(
+        JSON.stringify({ success: true, ignored: true, reason: 'Pagamento ainda não aprovado' }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    const normalizedEmail = String(buyerEmail).toLowerCase().trim();
 
     console.log('Dados extraídos:', { 
       buyerEmail, 
@@ -126,7 +138,7 @@ Deno.serve(async (req) => {
       .insert({
         webhook_type: 'single_content',
         raw_data: payload,
-        buyer_email: buyerEmail,
+        buyer_email: normalizedEmail,
         buyer_name: buyerName,
         buyer_phone: buyerPhone,
         buyer_document: buyerDocument,
@@ -151,8 +163,8 @@ Deno.serve(async (req) => {
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('user_id, full_name')
-      .eq('email', buyerEmail)
-      .single();
+      .ilike('email', normalizedEmail)
+      .maybeSingle();
 
     let userId: string;
 
@@ -162,7 +174,7 @@ Deno.serve(async (req) => {
       console.log('Usuário existente encontrado:', userId);
     } else {
       // Criar novo usuário
-      console.log('Criando novo usuário para:', buyerEmail);
+      console.log('Criando novo usuário para:', normalizedEmail);
       
       const tempPassword = Math.random().toString(36).slice(-12) + 'A1!';
       
@@ -203,7 +215,7 @@ Deno.serve(async (req) => {
       // --- fim ---
 
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: buyerEmail,
+        email: normalizedEmail,
         password: tempPassword,
         email_confirm: true,
         user_metadata: {
@@ -264,7 +276,7 @@ Deno.serve(async (req) => {
     if (webhookData?.id) {
       await supabase
         .from('purchase_webhooks')
-        .update({ processed: true })
+        .update({ processed: true, processed_at: new Date().toISOString(), user_id: userId })
         .eq('id', webhookData.id);
       
       console.log('Webhook marcado como processado');
