@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      checkout_product_mappings: {
+        Row: {
+          content_id: string | null
+          created_at: string
+          duration_days: number | null
+          external_product_id: string
+          grant_type: string
+          id: string
+          is_active: boolean
+          product_name: string
+          updated_at: string
+        }
+        Insert: {
+          content_id?: string | null
+          created_at?: string
+          duration_days?: number | null
+          external_product_id: string
+          grant_type: string
+          id?: string
+          is_active?: boolean
+          product_name: string
+          updated_at?: string
+        }
+        Update: {
+          content_id?: string | null
+          created_at?: string
+          duration_days?: number | null
+          external_product_id?: string
+          grant_type?: string
+          id?: string
+          is_active?: boolean
+          product_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_product_mappings_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "contents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_clicks: {
         Row: {
           clicked_at: string
@@ -237,6 +281,7 @@ export type Database = {
           buyer_phone: string | null
           created_at: string
           currency: string | null
+          external_product_id: string | null
           id: string
           payment_method: string | null
           payment_status: string | null
@@ -257,6 +302,7 @@ export type Database = {
           buyer_phone?: string | null
           created_at?: string
           currency?: string | null
+          external_product_id?: string | null
           id?: string
           payment_method?: string | null
           payment_status?: string | null
@@ -277,6 +323,7 @@ export type Database = {
           buyer_phone?: string | null
           created_at?: string
           currency?: string | null
+          external_product_id?: string | null
           id?: string
           payment_method?: string | null
           payment_status?: string | null
