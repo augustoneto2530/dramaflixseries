@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.webhook-noiva-pelo-destino]
 verify_jwt = false
+
+[functions.webhook-apaixonada-melhor-amigo-pai]
+verify_jwt = false
