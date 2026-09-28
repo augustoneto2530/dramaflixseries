@@ -13,3 +13,4 @@
 - [ ] Validar acesso avulso, compra pelo site e desbloqueio após pagamento/login
 - [x] Conferir a venda recente de "O Pai do Meu Namorado, Meu Pecado" e validar seu webhook
 - [x] Criar, publicar e validar o webhook avulso antigo de “Professora Mia”
+- [x] Colocar “Professora Mia” em primeiro nas listas aplicáveis e no banner principal

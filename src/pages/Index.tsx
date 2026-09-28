@@ -6,7 +6,7 @@ import { ContentCarousel } from '@/components/content/ContentCarousel';
 import { Content } from '@/lib/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useContentsQuery } from '@/hooks/useContentsQuery';
+import { PROFESSORA_MIA_CONTENT_ID, prioritizeProfessoraMia, useContentsQuery } from '@/hooks/useContentsQuery';
 
 export default function Index() {
   const { user } = useAuth();
@@ -30,6 +30,7 @@ export default function Index() {
   // Memoize filtered contents for performance
   const { heroContents, trendingContents, newContents, doramasContents, seriesContents, filmesContents, novelasContents, adultContents } = useMemo(() => {
     // Hero Slider: 7 specific titles in exact order from reference image
+    const professoraMia = allContents.find(c => c.id === PROFESSORA_MIA_CONTENT_ID);
     const heroTitles = [
       'o filho do meu marido',
       'de repente casados',
@@ -42,7 +43,9 @@ export default function Index() {
       '365 dias'
     ];
     
-    const heroSorted = heroTitles
+    const heroSorted = [
+      ...(professoraMia ? [professoraMia] : []),
+      ...heroTitles
       .map(title => {
         // For "365 dias", match exactly to avoid matching "365 DIAS - PARTE 3"
         if (title === '365 dias') {
@@ -50,7 +53,8 @@ export default function Index() {
         }
         return allContents.find(c => c.title.toLowerCase().includes(title));
       })
-      .filter(Boolean) as Content[];
+      .filter(Boolean) as Content[],
+    ];
     
     const featured = allContents.filter(c => c.is_featured);
     const adult = allContents.filter(c => c.category === 'adult' || c.is_adult);
@@ -102,17 +106,19 @@ export default function Index() {
       });
     };
 
-    const sortedTrending = dedupe([...adult, ...nonAdultTrending].sort(sortByPriority));
-    const sortedAdult = dedupe([...adult].sort(sortByPriority));
+    const sortedTrending = prioritizeProfessoraMia(dedupe([...adult, ...nonAdultTrending].sort(sortByPriority)));
+    const sortedAdult = prioritizeProfessoraMia(dedupe([...adult].sort(sortByPriority)));
+
+    const prioritizedCategory = (list: Content[]) => prioritizeProfessoraMia(dedupe(list));
 
     return {
       heroContents: dedupe(heroSorted).length > 0 ? dedupe(heroSorted) : dedupe(featured).slice(0, 4),
       trendingContents: sortedTrending,
-      newContents: dedupe(allContents.filter(c => c.is_new)),
-      doramasContents: dedupe(allContents.filter(c => c.category === 'doramas')),
-      seriesContents: dedupe(allContents.filter(c => c.category === 'series')),
-      filmesContents: dedupe(allContents.filter(c => c.category === 'filmes')),
-      novelasContents: dedupe(allContents.filter(c => c.category === 'novelas')),
+      newContents: prioritizedCategory(allContents.filter(c => c.is_new)),
+      doramasContents: prioritizedCategory(allContents.filter(c => c.category === 'doramas')),
+      seriesContents: prioritizedCategory(allContents.filter(c => c.category === 'series')),
+      filmesContents: prioritizedCategory(allContents.filter(c => c.category === 'filmes')),
+      novelasContents: prioritizedCategory(allContents.filter(c => c.category === 'novelas')),
       adultContents: sortedAdult
     };
   }, [allContents]);
