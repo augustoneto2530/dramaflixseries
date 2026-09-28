@@ -2,6 +2,16 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Content } from '@/lib/types';
 
+export const PROFESSORA_MIA_CONTENT_ID = '1a2b1e56-ed07-4c79-b6b9-be0f6ba70943';
+
+export function prioritizeProfessoraMia(list: Content[]): Content[] {
+  return [...list].sort((a, b) => {
+    if (a.id === PROFESSORA_MIA_CONTENT_ID) return -1;
+    if (b.id === PROFESSORA_MIA_CONTENT_ID) return 1;
+    return 0;
+  });
+}
+
 // Remove duplicados (mesmo id ou mesmo título)
 export function dedupeContents(list: Content[]): Content[] {
   const seenIds = new Set<string>();
