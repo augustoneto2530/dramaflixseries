@@ -47,3 +47,5 @@ verify_jwt = false
 
 [functions.webhook-unificado]
 verify_jwt = false
+[functions.webhook-professora-mia]
+verify_jwt = false
