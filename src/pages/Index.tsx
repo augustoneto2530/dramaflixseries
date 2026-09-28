@@ -109,7 +109,10 @@ export default function Index() {
     const sortedTrending = prioritizeProfessoraMia(dedupe([...adult, ...nonAdultTrending].sort(sortByPriority)));
     const sortedAdult = prioritizeProfessoraMia(dedupe([...adult].sort(sortByPriority)));
 
-    const prioritizedCategory = (list: Content[]) => prioritizeProfessoraMia(dedupe(list));
+    const prioritizedCategory = (list: Content[]) => prioritizeProfessoraMia(dedupe([
+      ...(professoraMia ? [professoraMia] : []),
+      ...list,
+    ]));
 
     return {
       heroContents: dedupe(heroSorted).length > 0 ? dedupe(heroSorted) : dedupe(featured).slice(0, 4),
