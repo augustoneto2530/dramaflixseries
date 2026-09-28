@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { ContentCard } from '@/components/content/ContentCard';
 import { Content } from '@/lib/types';
-import { useContentsQuery, dedupeContents, prioritizeProfessoraMia } from '@/hooks/useContentsQuery';
+import { PROFESSORA_MIA_CONTENT_ID, useContentsQuery, dedupeContents, prioritizeProfessoraMia } from '@/hooks/useContentsQuery';
 import { Flame, Heart, Film, Tv, Sparkles } from 'lucide-react';
 
 const categoryConfig: Record<string, { title: string; icon: React.ReactNode; description: string }> = {
@@ -45,7 +45,11 @@ export default function Category() {
     const filtered = allContents.filter((c) =>
       category === 'adult' ? c.category === 'adult' || c.is_adult : c.category === category
     );
-    return prioritizeProfessoraMia(dedupeContents(filtered));
+    const professoraMia = allContents.find((content) => content.id === PROFESSORA_MIA_CONTENT_ID);
+    return prioritizeProfessoraMia(dedupeContents([
+      ...(professoraMia ? [professoraMia] : []),
+      ...filtered,
+    ]));
   }, [allContents, category]);
 
 
