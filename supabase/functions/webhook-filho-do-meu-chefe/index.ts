@@ -28,6 +28,20 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    return new Response(
+      JSON.stringify({ success: true, service: 'webhook-filho-do-meu-chefe' }),
+      { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+    );
+  }
+
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ error: 'Método não permitido' }),
+      { status: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+    );
+  }
+
   try {
     console.log('=== Webhook Filho do Meu Chefe - Início ===');
 
@@ -35,7 +49,24 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const payload = await req.json();
+    const rawBody = await req.text();
+    if (!rawBody.trim()) {
+      return new Response(
+        JSON.stringify({ success: true, ignored: true, reason: 'Verificação sem conteúdo' }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    let payload: Record<string, any>;
+    try {
+      payload = JSON.parse(rawBody);
+    } catch {
+      console.warn('Notificação ignorada: corpo não é JSON válido');
+      return new Response(
+        JSON.stringify({ success: true, ignored: true, reason: 'Formato não reconhecido' }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
     console.log('Notificação recebida', {
       event: payload.event,
       transactionId: payload.payment?.id,
@@ -107,17 +138,35 @@ Deno.serve(async (req) => {
     const checkoutProductId = payload.product?.id || payload.products?.[0]?.id || payload.product_id || payload.data?.product?.id || '';
     const selectedAccess = PRODUCT_ACCESS.get(String(checkoutProductId));
 
+    if (!isApprovedPayment(paymentStatus)) {
+      console.info('Notificação ignorada: pagamento não aprovado', { paymentStatus, transactionId });
+      return new Response(
+        JSON.stringify({ success: true, ignored: true, reason: 'Pagamento não aprovado' }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    if (!selectedAccess) {
+      console.warn('Notificação ignorada: produto não reconhecido', { checkoutProductId, transactionId });
+      return new Response(
+        JSON.stringify({ success: true, ignored: true, reason: 'Produto não reconhecido' }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
     if (!buyerEmail) {
+      console.warn('Compra aprovada sem e-mail do comprador', { checkoutProductId, transactionId });
       return new Response(
         JSON.stringify({ error: 'Email do comprador é obrigatório' }),
         { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
 
-    if (!isApprovedPayment(paymentStatus) || !selectedAccess) {
+    if (!transactionId) {
+      console.warn('Compra aprovada sem identificador de transação', { checkoutProductId, buyerEmail });
       return new Response(
-        JSON.stringify({ success: true, ignored: true, reason: 'Pagamento não aprovado ou produto incorreto' }),
-        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        JSON.stringify({ error: 'Identificador da transação é obrigatório' }),
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
 
@@ -135,9 +184,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: webhookData, error: webhookError } = await supabase
+    let { data: webhookData, error: webhookError } = await supabase
       .from('purchase_webhooks')
-      .insert({
+      .upsert({
         webhook_type: 'single_content',
         raw_data: payload,
         buyer_email: buyerEmail,
@@ -152,14 +201,34 @@ Deno.serve(async (req) => {
         payment_method: paymentMethod,
         payment_status: paymentStatus,
         processed: false,
-      })
+      }, { onConflict: 'transaction_id,external_product_id', ignoreDuplicates: true })
       .select()
-      .single();
+      .maybeSingle();
 
-    if (webhookError) {
+    if (!webhookError && !webhookData) {
+      const existingWebhook = await supabase
+        .from('purchase_webhooks')
+        .select('*')
+        .eq('transaction_id', transactionId)
+        .eq('external_product_id', String(checkoutProductId))
+        .maybeSingle();
+
+      webhookData = existingWebhook.data;
+      webhookError = existingWebhook.error;
+
+      if (webhookData?.processed) {
+        console.info('Reenvio confirmado sem duplicar a compra', { transactionId, checkoutProductId });
+        return new Response(
+          JSON.stringify({ success: true, repeated: true, message: 'Compra já processada' }),
+          { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        );
+      }
+    }
+
+    if (webhookError || !webhookData) {
       console.error('Erro ao salvar webhook:', webhookError);
       return new Response(
-        JSON.stringify({ error: 'Erro ao salvar webhook', details: webhookError.message }),
+        JSON.stringify({ error: 'Erro ao salvar webhook', details: webhookError?.message || 'Registro não encontrado' }),
         { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
