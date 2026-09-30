@@ -229,7 +229,7 @@ Deno.serve(async (req) => {
     }
 
 
-    if (!webhookError && !webhookData) {
+    if (webhookError && !webhookData) {
       const existingWebhook = await supabase
         .from('purchase_webhooks')
         .select('*')
@@ -237,17 +237,20 @@ Deno.serve(async (req) => {
         .eq('external_product_id', String(checkoutProductId))
         .maybeSingle();
 
-      webhookData = existingWebhook.data;
-      webhookError = existingWebhook.error;
+      if (existingWebhook.data) {
+        webhookData = existingWebhook.data;
+        webhookError = null;
 
-      if (webhookData?.processed) {
-        console.info('Reenvio confirmado sem duplicar a compra', { transactionId, checkoutProductId });
-        return new Response(
-          JSON.stringify({ success: true, repeated: true, message: 'Compra já processada' }),
-          { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-        );
+        if (webhookData.processed) {
+          console.info('Reenvio confirmado sem duplicar a compra', { transactionId, checkoutProductId });
+          return new Response(
+            JSON.stringify({ success: true, repeated: true, message: 'Compra já processada' }),
+            { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+          );
+        }
       }
     }
+
 
     if (webhookError || !webhookData) {
       console.error('Erro ao salvar webhook:', webhookError);
