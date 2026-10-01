@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.ensure_current_user_profile(text) TO anon;
