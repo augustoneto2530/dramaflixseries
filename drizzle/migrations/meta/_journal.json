@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791051598933,
+      "tag": "0000_unlock_4_adult_series_for_subscribers",
+      "breakpoints": true
+    }
+  ]
+}
