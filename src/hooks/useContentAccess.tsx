@@ -127,6 +127,11 @@ export function useContentAccess() {
       return { hasAccess: true, accessType: 'full', purchasedContentIds };
     }
 
+    // Monthly/annual subscribers can watch the adult series unlocked for plans
+    if (content.is_adult && SUBSCRIPTION_UNLOCKED_ADULT_IDS.has(content.id) && hasValidSubscription && (profile.plan_type === 'monthly' || profile.plan_type === 'annual')) {
+      return { hasAccess: true, accessType: 'full', purchasedContentIds };
+    }
+
     // Standalone +18 access also applies when the customer has no monthly plan.
     if (content.is_adult && hasValidAdultAccess) {
       return { hasAccess: true, accessType: 'adult_only', purchasedContentIds };
