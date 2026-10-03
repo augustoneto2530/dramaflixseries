@@ -15,6 +15,14 @@ interface PurchasedContent {
   title: string;
 }
 
+// Séries +18 liberadas para assinantes dos planos Mensal e Anual
+const SUBSCRIPTION_UNLOCKED_ADULT_IDS = new Set([
+  '9aa670dd-725f-4c79-8eb2-2046bc7456c4', // O Filho do meu Marido, Meu Pecado!
+  'f81aa496-708e-4154-99b7-1148f4f91f77', // O Filho do meu Chefe
+  '1a2b1e56-ed07-4c79-b6b9-be0f6ba70943', // Professora Mia, Segredo Secreto!
+  'a46d57ec-b91e-4a63-8b9a-7a7228c74289', // Meu Presente de Solteiro Foi a Mãe da Minha NOIVA
+]);
+
 export function useContentAccess() {
   const { user, profile, isAdmin, isLoading: authLoading } = useAuth();
 
