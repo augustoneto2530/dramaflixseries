@@ -31,6 +31,7 @@ export default function Index() {
   const { heroContents, trendingContents, newContents, doramasContents, seriesContents, filmesContents, novelasContents, adultContents } = useMemo(() => {
     // Hero Slider: 7 specific titles in exact order from reference image
     const professoraMia = allContents.find(c => c.id === PROFESSORA_MIA_CONTENT_ID);
+    const castigadoPelaMadrasta = allContents.find(c => c.id === 'f1746685-58c6-4c55-a8c3-9bb0114dc83f');
     const heroTitles = [
       'o filho do meu marido',
       'de repente casados',
@@ -45,6 +46,7 @@ export default function Index() {
     
     const heroSorted = [
       ...(professoraMia ? [professoraMia] : []),
+      ...(castigadoPelaMadrasta ? [castigadoPelaMadrasta] : []),
       ...heroTitles
       .map(title => {
         // For "365 dias", match exactly to avoid matching "365 DIAS - PARTE 3"
@@ -116,7 +118,10 @@ export default function Index() {
 
     return {
       heroContents: dedupe(heroSorted).length > 0 ? dedupe(heroSorted) : dedupe(featured).slice(0, 4),
-      trendingContents: sortedTrending,
+      trendingContents: dedupe([
+        ...(castigadoPelaMadrasta ? [castigadoPelaMadrasta] : []),
+        ...sortedTrending,
+      ]),
       newContents: prioritizedCategory(allContents.filter(c => c.is_new)),
       doramasContents: prioritizedCategory(allContents.filter(c => c.category === 'doramas')),
       seriesContents: prioritizedCategory(allContents.filter(c => c.category === 'series')),
