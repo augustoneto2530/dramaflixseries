@@ -8,6 +8,13 @@
       "when": 1791051598933,
       "tag": "0000_unlock_4_adult_series_for_subscribers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792063771372,
+      "tag": "0001_unlock_acidente_madrasta_for_subscriptions",
+      "breakpoints": true
     }
   ]
 }
