@@ -44,19 +44,22 @@ export default function Index() {
       '365 dias'
     ];
     
-    const heroSorted = [
-      ...(professoraMia ? [professoraMia] : []),
-      ...(castigadoPelaMadrasta ? [castigadoPelaMadrasta] : []),
-      ...heroTitles
-      .map(title => {
-        // For "365 dias", match exactly to avoid matching "365 DIAS - PARTE 3"
-        if (title === '365 dias') {
-          return allContents.find(c => c.title.toLowerCase() === '365 dias');
-        }
-        return allContents.find(c => c.title.toLowerCase().includes(title));
-      })
-      .filter(Boolean) as Content[],
+    void heroTitles;
+    const heroIds = [
+      '1a2b1e56-ed07-4c79-b6b9-be0f6ba70943',
+      '9aa670dd-725f-4c79-8eb2-2046bc7456c4',
+      'f1746685-58c6-4c55-a8c3-9bb0114dc83f',
+      '63193d97-be09-4b86-b594-a3a68baca3e2',
+      'dc85415b-45a9-4ec5-8864-d611b65d59b2',
+      'a46d57ec-b91e-4a63-8b9a-7a7228c74289',
+      '1a9ae9dd-affd-4eed-85e2-d72c030bb57d',
+      '591c49e4-04dd-4ea2-9773-c85057d054fe',
+      '6084c12a-635e-4feb-b62c-db1eb68f3acf',
+      'f81aa496-708e-4154-99b7-1148f4f91f77',
     ];
+    const heroSorted = heroIds
+      .map(id => allContents.find(c => c.id === id))
+      .filter(Boolean) as Content[];
     
     const featured = allContents.filter(c => c.is_featured);
     const adult = allContents.filter(c => c.category === 'adult' || c.is_adult);
