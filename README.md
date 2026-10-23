@@ -1,73 +1,40 @@
-# Welcome to your Lovable project
+# Stream Central Hub
 
-## Project info
+Nosso site alvo: https://kdramatv.app e preciso que você clone esse site pra mim junto com todos os conteúdos, títulos, quero que você coloque aqui integralmente todas as imagens do site, ou seja eu quero que meu site seja extremamente igual ao site alvo.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Quero que o site tenha plano mensal e plano anual igual tem na pagina /plans do site alvo! os links eu enviarei posteriormente pra você.
 
-## How can I edit this code?
+Além disso eu quero que você faça pra mim uma área adm, onde somente eu com meio email e senha que irei criar poderá ter acesso na área adm, onde lá poderei adicionar membros, dar vip e ver usuários ativos no site em tempo real.
 
-There are several ways of editing your application.
+Os usuários que irão se cadastrar no site irão vir diretamente do webhook do meu produto. Então quero que você faça pra mim um webhook mensal e um webhook anual.
 
-**Use Lovable**
+QUERO UM WEBHOOK BEM GENERICO QUE PEGUE TODOS OS DADOS DOS USUARIOS QUE IRÃO COMPRAR O PRODUTO.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Quero que você seja fiel as caregorias: doramas, +18, novelas, filmes, series, etc...
 
-Changes made via Lovable will be committed automatically to this repo.
+Quero também que na área adm você crie pra mim um setor conteúdos, onde irei poder atualizar o conteúdo, as imagens serão adicionar por link e os vídeos também serão adicionados por links, link do vídeo será estilo esse https://pub-ed88f3ba6f6948e390435265dd9f981b.r2.dev/videos/1761369665118-amor-em-colapso.mp4.
 
-**Use your preferred IDE**
+Essa é a metodologia inicial, após isso nós iremos ir organizando.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+This project was built with [Lovable](https://lovable.dev).
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+**Live app**: https://dramaflixseries.lovable.app
 
-Follow these steps:
+## Build with Lovable
+
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/2bfbd21a-5677-4e65-8ee1-648f82a0c4cb).
+
+- **Ship faster**: describe what you want to build and Lovable handles the code.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+
+## Development
+
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+git clone <this-repository-url>
+cd <repository-name>
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
