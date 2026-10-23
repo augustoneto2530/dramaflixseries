@@ -1,5 +1,6 @@
 INSERT INTO public.checkout_product_mappings (external_product_id, product_name, grant_type, content_id, duration_days, is_active)
-VALUES ('DdDZosKap9UaVb8SCgEd', 'O Pai do meu namorado, meu pecado!', 'single_content', '6084c12a-635e-4feb-b62c-db1eb68f3acf', NULL, true)
+SELECT 'DdDZosKap9UaVb8SCgEd', 'O Pai do meu namorado, meu pecado!', 'single_content', '6084c12a-635e-4feb-b62c-db1eb68f3acf'::uuid, NULL, true
+WHERE EXISTS (SELECT 1 FROM public.contents WHERE id = '6084c12a-635e-4feb-b62c-db1eb68f3acf')
 ON CONFLICT (external_product_id) DO UPDATE SET
   product_name = EXCLUDED.product_name,
   grant_type = EXCLUDED.grant_type,
